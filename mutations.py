@@ -5,10 +5,6 @@ from random import randint
 choices = [1, 2, 4]
 bits_in_byte = 8
 
-# Formatting into binary sample
-test = "test"
-print(' '.join(format(ord(x), 'b') for x in a))
-
 # FUNCTION TO TRANSFORM INPUT INTO BINARY
 def to_binary_2d(input):
     byte_count = 0
@@ -50,7 +46,6 @@ def bitflip (input: str):
             elif (b[i] == '0'):
                 b[i] = '1'
     input = "".join(b)
-    return input
 
 # Flip a set number of consecutive bytes
 def byteflip (input: str):
@@ -65,7 +60,6 @@ def byteflip (input: str):
             elif (b[i][j] == '0'):
                 b[i][j] = '1'
     input = "".join("".join(x) for x in b)
-    return input
 
 # def arithmetic_inc (input: str):
     
@@ -88,11 +82,20 @@ def delete_bytes (input: str):
     for i in range(count + 1):
         b.pop(start_point)
     input = "".join("".join(x) for x in b)
-    return input
 
-def insert_bytes (input: str):
+def insert_bytes (input: str, sample: str):
     # Needs other cases to copy bytes from
-    return input
+    b1, number1 = to_binary_2d(input)
+    b2, number2 = to_binary_2d(sample)
+    output = []
+    extract = randint(0,number2 -1)
+    insertion = randint(0, number1 -1)
+    for i in range(0,insertion):
+        output.append(b1[i])
+    output.append(sample[extract])
+    for i in range(insertion, number1):
+        output.append[b1[i]]
+    input = output
 
 def overwrite_bytes (input: str):
     # Similar to random

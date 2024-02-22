@@ -45,7 +45,13 @@ def bitflip (input: str):
                 b[i] = '0'
             elif (b[i] == '0'):
                 b[i] = '1'
-    output = "".join(b)
+    output = ""
+    temp = ""
+    for i in range(number):
+        temp = temp + b[i]
+        if (i%8 == 7):
+            output = output + chr(int(temp))
+            temp = ""
     return output
 
 # Flip a set number of consecutive bytes
@@ -60,7 +66,7 @@ def byteflip (input: str):
                 b[i][j] = '0'
             elif (b[i][j] == '0'):
                 b[i][j] = '1'
-    output = "".join("".join(x) for x in b)
+    output = "".join(chr(int("".join(x) for x in b3)))
     return output
 
 # Change a single byte in test case
@@ -77,7 +83,7 @@ def random_bytes (input: str):
     # Choose which byte to replace
     rbyte = randint(o, number-1)
     b[rbyte] = replacement
-    output = "".join("".join(x) for x in b)
+    output = "".join(chr(int("".join(x) for x in b3)))
     return output
 
 # Completely remove a certain number of consecutive bytes
@@ -88,7 +94,7 @@ def delete_bytes (input: str):
     count = randint(0, limit)
     for i in range(count + 1):
         b.pop(start_point)
-    output = "".join("".join(x) for x in b)
+    output = "".join(chr(int("".join(x) for x in b3)))
     return output
 
 def insert_bytes (input: str, sample: str):
@@ -100,10 +106,10 @@ def insert_bytes (input: str, sample: str):
     insertion = randint(0, number1 -1)
     for i in range(0,insertion):
         b3.append(b1[i])
-    b3.append(sample[extract])
+    b3.append(b2[extract])
     for i in range(insertion, number1):
         b3.append[b1[i]]
-    output = "".join("".join(x) for x in b3)
+    output = "".join(chr(int("".join(x) for x in b3)))
     return output
 
 # Change several bytes in a text case

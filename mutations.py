@@ -5,7 +5,7 @@ from random import randint
 choices = [1, 2, 4]
 bits_in_byte = 8
 
-# FUNCTION TO TRANSFORM INPUT INTO BINARY
+# FUNCTIONS USED TO ASSIST MUTATION
 def to_binary_2d(input):
     byte_count = 0
     # Sample to split into bits
@@ -45,7 +45,8 @@ def bitflip (input: str):
                 b[i] = '0'
             elif (b[i] == '0'):
                 b[i] = '1'
-    input = "".join(b)
+    output = "".join(b)
+    return output
 
 # Flip a set number of consecutive bytes
 def byteflip (input: str):
@@ -59,19 +60,25 @@ def byteflip (input: str):
                 b[i][j] = '0'
             elif (b[i][j] == '0'):
                 b[i][j] = '1'
-    input = "".join("".join(x) for x in b)
+    output = "".join("".join(x) for x in b)
+    return output
 
-# def arithmetic_inc (input: str):
-    
-#     return input
-
-# def arithmetic_dec (input: str):
-    
-#     return input
-
+# Change a single byte in test case
 def random_bytes (input: str):
-    # Needs sample bytes
-    return input
+    b, number = to_binary_2d(input)
+    # Create a byte for replacement
+    replacement = []
+    for i in range(bits_in_byte):
+        bit = randint(0,1)
+        if (bit == 1):
+            replacement.append('1')
+        elif (bit == 0):
+            replacement.append('0')
+    # Choose which byte to replace
+    rbyte = randint(o, number-1)
+    b[rbyte] = replacement
+    output = "".join("".join(x) for x in b)
+    return output
 
 # Completely remove a certain number of consecutive bytes
 def delete_bytes (input: str):
@@ -81,22 +88,25 @@ def delete_bytes (input: str):
     count = randint(0, limit)
     for i in range(count + 1):
         b.pop(start_point)
-    input = "".join("".join(x) for x in b)
+    output = "".join("".join(x) for x in b)
+    return output
 
 def insert_bytes (input: str, sample: str):
     # Needs other cases to copy bytes from
     b1, number1 = to_binary_2d(input)
     b2, number2 = to_binary_2d(sample)
-    output = []
+    b3 = []
     extract = randint(0,number2 -1)
     insertion = randint(0, number1 -1)
     for i in range(0,insertion):
-        output.append(b1[i])
-    output.append(sample[extract])
+        b3.append(b1[i])
+    b3.append(sample[extract])
     for i in range(insertion, number1):
-        output.append[b1[i]]
-    input = output
+        b3.append[b1[i]]
+    output = "".join("".join(x) for x in b3)
+    return output
 
+# Change several bytes in a text case
 def overwrite_bytes (input: str):
     # Similar to random
     return input

@@ -38,6 +38,7 @@ async def main():
         case _:
             raise ValueError("Invalid protocol") 
         
+        
 
     path = random_key(grammar["paths"])
     
@@ -45,7 +46,7 @@ async def main():
 
     #TODO assign energy
     #TODO mutate input
-    payload = None
+    payload = ''
     response_payload, status_code = await client.send_payload(payload, path, code)
     print(f"Path: {path}")
     print(f"Payload: f{payload}")

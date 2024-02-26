@@ -6,36 +6,31 @@ import string
 
 
 class COAPClient:
-    def __init__(self):
-        self.host = "localhost"
-        self.port = "5683"
-        self.uri = {
-            "basic": [Code.GET, Code.PUT, Code.POST, Code.DELETE], 
-            "storage": [Code.GET, Code.POST], 
-            "child": [Code.GET, Code.PUT, Code.POST, Code.DELETE],
-            "seperate": [Code.GET], 
-            "long": [Code.GET],
-            "big": [Code.GET, Code.POST],
-            "void": [],
-            "xml": [Code.GET],
-            "encoding": [Code.GET, Code.PUT, Code.POST],
-            "etag": [Code.GET, Code.PUT, Code.POST],
-            "advanced": [Code.GET, Code.PUT, Code.POST, Code.DELETE],
-            "advancedSeperate": [Code.GET, Code.PUT, Code.POST, Code.DELETE]
-        }
+    def __init__(self, url):
+        self.url = url
     
     async def code_to_str(self, code: Code):
         return code.__str__()
     
-    async def get_codes(self, uri):
-        return self.uri.get(uri, None)
-    
-    async def get_uris(self):
-        return dict.keys(self.uri)
+    async def str_to_code(self, code: str):
+        match code:
+            case "get":
+                return Code.GET
 
-    async def send_payload(self, payload, uri):
+            case "post":
+                return Code.POST
+            
+            case "put":
+                return Code.PUT
+            
+            case "delete":
+                return Code.DELETE
+            case _:
+                raise ValueError(f"Unknown code: {code}")
+    
+
+    async def send_payload(self, payload, uri, code):
         protocol = await Context.create_client_context()
-        msg = Message(code=Code.GET, uri=f"coap://{self.host}:{self.port}/{uri}", payload=payload)
+        msg = Message(code=(await self.str_to_code(code)), uri=f"url{uri}", payload=payload)
         response: Message = await protocol.request(msg).response
-        
-        return {response.payload, self.code_to_str(response.code)}
+        return response.payload, self.code_to_str(response.code)

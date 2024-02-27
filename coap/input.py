@@ -5,13 +5,32 @@ import string
 
 
 
-async def send_payload(input):
-    payload = "Hello, CoAP!"
-    num_bytes = 5
-    protocol = await Context.create_client_context()
-    fuzz_bytes = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(num_bytes))
-    payload = payload[:3] + fuzz_bytes + payload[3 + num_bytes:]
-    msg = Message(code=Code.GET, uri="coap://localhost:5683/basic", payload=payload)
-    response: Message = await protocol.request(msg).response
-    print(response.payload)
+class COAPClient:
+    def __init__(self, url):
+        self.url = url
     
+    async def code_to_str(self, code: Code):
+        return code.__str__()
+    
+    async def str_to_code(self, code: str):
+        match code:
+            case "get":
+                return Code.GET
+
+            case "post":
+                return Code.POST
+            
+            case "put":
+                return Code.PUT
+            
+            case "delete":
+                return Code.DELETE
+            case _:
+                raise ValueError(f"Unknown code: {code}")
+    
+
+    async def send_payload(self, payload, uri, code):
+        protocol = await Context.create_client_context()
+        msg = Message(code=(await self.str_to_code(code)), uri=f"url{uri}", payload=payload)
+        response: Message = await protocol.request(msg).response
+        return response.payload, self.code_to_str(response.code)

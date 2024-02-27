@@ -3,31 +3,35 @@ import httpx
 
 
 
-async def send_payload(input):
-    client = httpx.AsyncClient(http2=True)
-    # Replace 'http://<Django app URL>' with the base URL of your Django app (e.g., 'http://localhost:8000')
-    base_url = 'http://127.0.0.1:8000'
 
-    registration_endpoint = '/accounts/register/'
 
-    registration_url = base_url + registration_endpoint
+class DjangoClient:
 
-    user_data = {
-        'username': 'john',
-        'email': 'john@example.com',
-        'password1': 'MyPassword123',
-        'password2': 'MyPassword123'  # Confirm password
-    }
+    def __init__(self, url):
+        self.url = url
+        self.client = httpx.AsyncClient()
 
-    try:
-        # Send a POST request to the registration endpoint with the user data
-        response =  await client.post(registration_url, json=user_data)
-        # Check if the request was successful (status code 200 or 201 for successful creation)
-        if response.status_code in (200, 201):
-            print("User registration successful!")
-            print("Response:")
-            print(response.text)
-        else:
-            print(f"User registration failed with status code: {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        print("User registration request failed:", e)
+    
+    async def send_payload(self, input, uri, code):
+        # Replace 'http://<Django app URL>' with the base URL of your Django app (e.g., 'http://localhost:8000')
+
+        registration_endpoint = f'{uri}'
+
+        registration_url = self.url + registration_endpoint
+
+        try:
+            match code:
+                case "get":
+                    response =  await self.client.get(registration_url)
+                case "post":
+                    # Send a POST request to the registration endpoint with the user data
+                    response =  await self.client.post(registration_url, json=input)
+                case "put":
+                    response =  await self.client.put(registration_url, json=input)
+                case "delete":
+                    response =  await self.client.delete(registration_url)
+                
+            return response.text, response.status_code
+        except requests.exceptions.RequestException as e:
+            print("User registration request failed:", e)
+            return None, None

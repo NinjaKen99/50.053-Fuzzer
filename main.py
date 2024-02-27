@@ -11,6 +11,29 @@ import assign_energy
 def random_key(dictionary):
     return random.choice(list(dictionary.keys()))
 
+def is_interesting(response_payload, status_code):
+    """Check if the response indicates a potential error or contains sensitive information."""
+    # Check if the status code indicates a server error
+    if status_code >= 500:
+        print("Found a potential server error.")
+        return True
+
+    # Check for indicators of errors or sensitive information in the response
+    error_indicators = ["exception", "error", "unhandled", "failure"]
+    sensitive_info_indicators = ["password", "username", "private key", "API key"]
+    
+    # Check for error indicators
+    if any(indicator in response_payload.lower() for indicator in error_indicators):
+        print("Found a potential error indicator in the response.")
+        return True
+    
+    # Check for sensitive information indicators
+    if any(indicator in response_payload.lower() for indicator in sensitive_info_indicators):
+        print("Found potential sensitive information in the response.")
+        return True
+
+    return False
+
 async def main():
     parser = argparse.ArgumentParser(description='Description of your script')
     parser.add_argument('arg1', type=str, help='Protocol of Request')
@@ -67,6 +90,9 @@ async def main():
             print(f"Status code: f{status_code}\n")
 
             #TODO isInteresting
+            if is_interesting(response_payload, status_code):
+                print("Interesting finding! Adding to the FailureQ.")
+                FailureQ.append((payload, response_payload, status_code))
 
     # TODO: Save files in something
 

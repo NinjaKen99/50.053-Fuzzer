@@ -5,6 +5,8 @@ import random
 
 from coap.input import COAPClient
 from django.input import DjangoClient
+import assign_energy
+
 
 def random_key(dictionary):
     return random.choice(list(dictionary.keys()))
@@ -37,23 +39,36 @@ async def main():
         
         case _:
             raise ValueError("Invalid protocol") 
-        
-        
 
+    # select random path and method in grammar
     path = random_key(grammar["paths"])
-    
-    code = random_key(grammar["paths"][path])
+    methods = grammar["paths"][path]
+    method = random_key(methods)
 
-    #TODO assign energy
-    #TODO mutate input
-    payload = ''
-    response_payload, status_code = await client.send_payload(payload, path, code)
-    print(f"Path: {path}")
-    print(f"Payload: f{payload}")
-    print(f"Response: {response_payload}")
-    print(f"Status code: f{status_code}\n")
+    # Initialize your seed and failure queues
+    SeedQ = dictionary
+    FailureQ = []
 
-    #TODO save files in something
+    while SeedQ:
+        # TODO ChooseNext from SeedQ
+        seed = ''
+
+        # AssignEnergy
+        energy = assign_energy.AssignEnergy(seed)
+
+        for _ in range(energy):
+            #TODO mutate input
+            payload = ''
+
+            response_payload, status_code = await client.send_payload(payload, path, method)
+            print(f"Path: {path}")
+            print(f"Payload: f{payload}")
+            print(f"Response: {response_payload}")
+            print(f"Status code: f{status_code}\n")
+
+            #TODO isInteresting
+
+    # TODO: Save files in something
 
     
     

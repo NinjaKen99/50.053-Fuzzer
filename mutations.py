@@ -105,10 +105,10 @@ class mutation:
         return output
     
     # Change several bytes in a text case
-    def overwrite_bytes (input = ""):
+    #def overwrite_bytes (input = ""):
         # Similar to random
-        return input
+    #    return input
 
 
 print("test")
-print(mutation.bitflip("testing"))
+print(mutation.byteflip("testing"))

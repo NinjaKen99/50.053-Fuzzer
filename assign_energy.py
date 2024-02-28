@@ -1,4 +1,4 @@
-def AssignEnergy(input_data):
+def AssignEnergy(input_data: dict):
     complexity = 0
     
     for key, value in input_data.items():

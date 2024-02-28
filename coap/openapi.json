@@ -11,7 +11,7 @@
   },
   "servers": [
     {
-      "url": "coap://localhost:5683"
+      "url": "coap://127.0.0.1:5683"
     }
   ],
   "tags": [

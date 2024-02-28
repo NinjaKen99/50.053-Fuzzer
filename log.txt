@@ -1,0 +1,13 @@
+/storage:
+code:post, status code: 405, no = 402
+code:get, status code: 404, no = 308
+/basic:
+code:put, status code: 404, no = 218
+code:get, status code: 404, no = 158
+code:post, status code: 405, no = 214
+code:delete, status code: 404, no = 156
+/child:
+code:delete, status code: 404, no = 155
+code:get, status code: 404, no = 166
+code:put, status code: 404, no = 216
+code:post, status code: 405, no = 1080

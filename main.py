@@ -43,19 +43,13 @@ async def main():
     try:
         parser = argparse.ArgumentParser(description='Description of your script')
         parser.add_argument('arg1', type=str, help='Protocol of Request')
-        parser.add_argument('arg2', type=str, help='Url paths in Openapi json format')
-        parser.add_argument('arg3', type=str, help='inital seeds for the fuzzing in json format')
+        parser.add_argument('arg2', type=str, help='OpenAPI 3.03 json file')
         
         args = parser.parse_args()
 
         with open(args.arg2) as f:
-            # Load the JSON data
+            # Load the OpenAPI file
             grammar = json.load(f)
-        
-        with open(args.arg3) as f:
-            # Load the JSON data
-            dictionary = json.load(f)
-        
 
         url = grammar["servers"][0]["url"]
         match args.arg1:
@@ -68,13 +62,14 @@ async def main():
             
             case _:
                 raise ValueError("Invalid protocol") 
+            
         # select random path and method in grammar
         path = random_key(grammar["paths"])
         methods = grammar["paths"][path]
         method = random_key(methods)
 
-        # Initialize your seed and failure queues
-        SeedQ = dictionary["paths"]
+        #TODO Initialize your seed and failure queues
+        SeedQ = ''
         
         FailureQ = {}
 
@@ -88,8 +83,10 @@ async def main():
                 FailureQ[key] = {}
             if key2 not in FailureQ[key]:
                 FailureQ[key][key2] = {}
+
             # AssignEnergy
             energy = assign_energy.AssignEnergy(seed)
+
             for _ in range(energy):
                 #TODO mutate input
                 payload = seed["input"]

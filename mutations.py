@@ -59,7 +59,7 @@ class mutation:
     # Flip a set number of consecutive bits within a byte
     @staticmethod
     def bitflip (input = "testing"):
-        b, number = mutation.str_to_bytes(input)
+        b, number, datatype = mutation.convert_bytes(input)
         # choose number of bits to change
         count = choices[randint(0,2)]
         index = randint(0, number-1)
@@ -73,8 +73,7 @@ class mutation:
                     replacement += '1'
         replacement += byte_chosen[start_of_change + count:]
         b[index] = replacement
-        output = ''.join([chr(int(x, 2)) for x in b])
-        return output
+        return mutation.convert_back(b, datatype)
     
     # Flip a set number of consecutive bytes
     @staticmethod
@@ -95,10 +94,9 @@ class mutation:
                 elif (bit == '0'):
                     temp += '1'
             b[bytes] = '0' + temp[1:] # Prevent exceed charmap
-        output = mutation.convert_back(b, datatype)
-        return output
+        return mutation.convert_back(b, datatype)
     
-    # Insert byte from different test case
+    # Insert byte from different test case ONLY WORKS FOR STRING
     @staticmethod
     def insert_bytes (input = "testing", sample = "anything"):
         # Needs other cases to copy bytes from
@@ -118,7 +116,7 @@ class mutation:
     # Change a single byte in test case
     @staticmethod
     def random_byte (input = "testing"): 
-        b, number = mutation.str_to_bytes(input)
+        b, number, datatype = mutation.convert_bytes(input)
         # Create a byte for replacement
         replacement = ""
         for i in range(bits_in_byte):
@@ -130,20 +128,26 @@ class mutation:
         # Choose which byte to replace
         rbyte = randint(0, number-1)
         b[rbyte] = replacement
-        output = ''.join([chr(int(x, 2)) for x in b])
-        return output
+        return mutation.convert_back(b, datatype)
     
     # Completely remove a certain number of consecutive bytes
     @staticmethod
     def delete_bytes (input = "testing"):
-        b, number = mutation.str_to_bytes(input)
-        start_point = randint(0, number - 1)
-        limit = (number - 1) - start_point
-        count = randint(0, limit)
+        b, number, datatype = mutation.convert_bytes(input)
+        if (datatype == str):
+            start_point = randint(0, number - 1)
+            limit = (number - 1) - start_point
+            count = randint(0, limit)
+        elif (datatype == int):
+            start_point = randint(0, number - 1)
+            limit = (number - 2) - start_point
+            if limit <= 0:
+                count = 0
+            else:
+                count = randint(0, limit)
         for i in range(count + 1):
             b.pop(start_point)
-        output = ''.join([chr(int(x, 2)) for x in b])
-        return output
+        return mutation.convert_back(b, datatype)
     
     # Change several bytes in a text case
     #def overwrite_bytes (input = ""):
@@ -156,4 +160,4 @@ print('test')
 #print(testing)
 #test_set, test_number = mutation.int_to_bytes(2143765)
 #print(mutation.bytes_to_int(test_set))
-print(mutation.byteflip(134))
+print(mutation.delete_bytes(123))

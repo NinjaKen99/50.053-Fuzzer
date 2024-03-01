@@ -7,7 +7,8 @@ from coap.input import COAPClient
 from django.input import DjangoClient
 import assign_energy
 from mutations import mutation
-
+from openapi_parser import parse
+from openapi_parser.specification import Path, Object
 
 def random_key(dictionary):
     return random.choice(list(dictionary.keys()))
@@ -15,6 +16,9 @@ def random_key(dictionary):
 def is_interesting(response_payload, status_code):
     """Check if the response indicates a potential error or contains sensitive information."""
     # Check if the status code indicates a server error
+    if status_code == None:
+        return False
+    status_code = int(status_code)
     if status_code >= 300:
         print("Found a potential server error.")
         return True
@@ -41,85 +45,107 @@ def choose_next(SeedQ):
 
 async def main():
     try:
+        FailureQ = {}
         parser = argparse.ArgumentParser(description='Description of your script')
         parser.add_argument('arg1', type=str, help='Protocol of Request')
         parser.add_argument('arg2', type=str, help='Url paths in Openapi json format')
-        parser.add_argument('arg3', type=str, help='inital seeds for the fuzzing in json format')
+        #parser.add_argument('arg3', type=str, help='inital seeds for the fuzzing in json format')
         
         args = parser.parse_args()
 
-        with open(args.arg2) as f:
-            # Load the JSON data
-            grammar = json.load(f)
+        try:
+            grammar = parse(args.arg2)
         
-        with open(args.arg3) as f:
-            # Load the JSON data
-            dictionary = json.load(f)
+        except Exception as e:
+            print(e)
+            return
+        # with open(args.arg3) as f:
+        #     # Load the JSON data
+        #     dictionary = json.load(f)
         
 
-        url = grammar["servers"][0]["url"]
+        url = grammar.servers[0]
+        
         match args.arg1:
             
             case "coap":
-                client = COAPClient(url)
+                client = COAPClient(url.url)
             
             case "http":
-                client = DjangoClient(url)
+                client = DjangoClient(url.url)
             
             case _:
                 raise ValueError("Invalid protocol") 
+            
+        # load all examples/inputs into SeedQ
         # select random path and method in grammar
-        path = random_key(grammar["paths"])
-        methods = grammar["paths"][path]
-        method = random_key(methods)
-
-        # Initialize your seed and failure queues
-        SeedQ = dictionary["paths"]
+        SeedQ = dict()
+        for path in grammar.paths:
+            methods = path.operations
+            SeedQ[path.url] = dict()
+            for operation in methods:
+                method = operation.method.value
+                body = operation.request_body
+                if body != None:
+                    if body.content[0].schema.type.value == "string":
+                        SeedQ[path.url][method] = {"string": body.content[0].schema.example}
+                    elif body.content[0].schema.type.value == "object":
+                        object: Object = body.content[0].schema
+                        SeedQ[path.url][method] = {}
+                        for i in object.properties:
+                            SeedQ[path.url][method][i.name] = i.schema.example
         
-        FailureQ = {}
-
+        await asyncio.sleep(2)
         while SeedQ:
             # TODO ChooseNext from SeedQ
-            key = random_key(SeedQ)
-            key2 = random_key(SeedQ[key])
-            seed = SeedQ[key][key2]
+            
+            path = random_key(SeedQ)
+            if SeedQ[path] == {}:
+                SeedQ.pop(path)
+                continue
+                
+            if path not in FailureQ:
+                FailureQ[path] = {}
+            
+            method = random_key(SeedQ[path])
+            
+            if method not in FailureQ[path]:
+                FailureQ[path][method] = {}
 
-            if key not in FailureQ:
-                FailureQ[key] = {}
-            if key2 not in FailureQ[key]:
-                FailureQ[key][key2] = {}
             # AssignEnergy
-            energy = assign_energy.AssignEnergy(seed)
+            energy = assign_energy.AssignEnergy(SeedQ[path][method])
             for _ in range(energy):
                 #TODO mutate input
-                payload = seed["input"]
-
-                payload = mutation.random_byte(payload)
-                response_payload, status_code = await client.send_payload(payload, path, key2)
+                payload = SeedQ[path][method]
+                for x in payload:
+                    print(x)
+                    payload[x] = mutation.random_byte(payload[x])
+                
+                response_payload, status_code = await client.send_payload(payload, path, method)
                 print(f"Path: {path}")
                 print(f"Payload: {payload}")
                 print(f"Response: {response_payload}")
                 print(f"Status code: {status_code}\n")
 
                 #TODO isInteresting
-                if is_interesting(response_payload, int(status_code)):
+                if is_interesting(response_payload, status_code):
                     print("Interesting finding! Adding to the FailureQ.")
-                    if status_code not in FailureQ[key][key2]:
-                        FailureQ[key][key2][status_code] = []
-                    FailureQ[key][key2][status_code].append((payload, response_payload))
+                    if status_code not in FailureQ[path][method]:
+                        FailureQ[path][method][status_code] = []
+                    FailureQ[path][method][status_code].append((payload, response_payload))
     
-    except Exception as e:
-        print(e)     
     except KeyboardInterrupt:
         pass
     
-
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        raise e
     finally:
         log = ""
         print()
-        print("FailureQ: ", FailureQ)
+        #print("FailureQ: ", FailureQ)
         for x in FailureQ:
-            print(x)
+            #print(x)
             log+= x + ":\n"
             for y in FailureQ[x]:
                 for z in FailureQ[x][y]:
@@ -133,7 +159,6 @@ async def main():
         await asyncio.sleep(20)
         print("Exiting...")
         await asyncio.sleep(5)
-    
         
         
     

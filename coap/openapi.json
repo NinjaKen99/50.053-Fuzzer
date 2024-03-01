@@ -45,15 +45,10 @@
         "requestBody": {
           "description": "Creation",
           "content": {
-            "application/json": {
+            "text/plain": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "message": {
-                    "type": "string",
-                    "example": "Hello, world!"
-                  }
-                }
+                "type": "string",
+                "example": "Hello, world!"
               }
             }
           }
@@ -62,15 +57,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -85,15 +75,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -107,15 +92,10 @@
         "requestBody": {
           "description": "Creation",
           "content": {
-            "application/json": {
+            "text/plain": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "message": {
-                    "type": "string",
-                    "example": "Hello, world!"
-                  }
-                }
+                "type": "string",
+                "example": "Hello, world!"
               }
             }
           }
@@ -124,15 +104,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -147,15 +122,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -172,15 +142,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -194,15 +159,10 @@
         "requestBody": {
           "description": "Creation",
           "content": {
-            "application/json": {
+            "text/plain": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "message": {
-                    "type": "string",
-                    "example": "Hello, world!"
-                  }
-                }
+                "type": "string",
+                "example": "Hello, world!"
               }
             }
           }
@@ -211,15 +171,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -235,15 +190,10 @@
         "requestBody": {
           "description": "Creation",
           "content": {
-            "application/json": {
+            "text/plain": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "message": {
-                    "type": "string",
-                    "example": "Hello, world!"
-                  }
-                }
+                "type": "string",
+                "example": "Hello, world!"
               }
             }
           }
@@ -252,15 +202,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -275,15 +220,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -307,15 +247,10 @@
         "requestBody": {
           "description": "Creation",
           "content": {
-            "application/json": {
+            "text/plain": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "message": {
-                    "type": "string",
-                    "example": "Hello, world!"
-                  }
-                }
+                "type": "string",
+                "example": "Hello, world!"
               }
             }
           }
@@ -324,15 +259,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }
@@ -347,15 +277,10 @@
           "200": {
             "description": "Successful operation",
             "content": {
-              "application/json": {
+              "text/plain": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string",
-                      "example": "Hello, world!"
-                    }
-                  }
+                  "type": "string",
+                  "example": "Hello, world!"
                 }
               }
             }

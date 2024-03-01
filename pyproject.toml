@@ -11,6 +11,7 @@ python = "^3.11"
 requests = "^2.31.0"
 aiocoap = {extras = ["ws"], version = "^0.4.7"}
 httpx = {extras = ["cli"], version = "^0.26.0"}
+openapi3-parser = "^1.1.17"
 
 
 [tool.poetry.group.coap.dependencies]

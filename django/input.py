@@ -1,3 +1,4 @@
+import re
 import requests
 import httpx
 
@@ -18,7 +19,13 @@ class DjangoClient:
         registration_endpoint = f'{uri}'
 
         registration_url = self.url + registration_endpoint
-
+        pattern = r'\{.*?\}'
+        matches = re.findall(pattern, registration_url)
+        if matches:
+            for x in matches:
+                if x[1:-1] in input:
+                    registration_url = registration_url.replace(x, input[x[1:-1]])
+        print(uri)
         try:
             match code:
                 case "get":
@@ -31,7 +38,10 @@ class DjangoClient:
                 case "delete":
                     response =  await self.client.delete(registration_url)
                 
-            return response.text, response.status_code
+            return response.reason_phrase, response.status_code
         except requests.exceptions.RequestException as e:
             print("User registration request failed:", e)
+            return None, None
+
+        except Exception as e:
             return None, None

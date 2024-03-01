@@ -35,6 +35,7 @@ class COAPClient:
     async def send_payload(self, payload, uri, code):
         protocol = await Context.create_client_context()
         code = await self.str_to_code(code)
+        payload = payload["string"]
         print(f"Sending payload: {payload} to {self.url}{uri} with {code}")
         # await asyncio.sleep(random.uniform(0, 1))  # Simulate network delay
         msg = Message(code=code, uri=f"{self.url}{uri}", payload=bytes(payload, "utf-8"))
@@ -44,8 +45,18 @@ class COAPClient:
 
 # async def main():
 #     client = COAPClient("coap://127.0.0.1:5683")
-#     s = await client.send_payload("Hellfsfsfo World!", "/child", "get")
-#     print(s)
+#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "get"))
+#     await asyncio.sleep(1)
+#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "post"))
+#     await asyncio.sleep(1)
+#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "delete"))
+#     await asyncio.sleep(1)
+#     # print(await client.send_payload({"string":"Hellfsf World!"}, "/child", "delete"))
+#     # await asyncio.sleep(1)
+#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "post"))
+#     await asyncio.sleep(1)
+#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "get"))
+    
     
 
 # asyncio.run(main())

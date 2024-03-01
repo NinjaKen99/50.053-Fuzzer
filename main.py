@@ -48,8 +48,7 @@ async def main():
         FailureQ = {}
         parser = argparse.ArgumentParser(description='Description of your script')
         parser.add_argument('arg1', type=str, help='Protocol of Request')
-        parser.add_argument('arg2', type=str, help='Url paths in Openapi json format')
-        #parser.add_argument('arg3', type=str, help='inital seeds for the fuzzing in json format')
+        parser.add_argument('arg2', type=str, help='OpenAPI 3.03 json file')
         
         args = parser.parse_args()
 

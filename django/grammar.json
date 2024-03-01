@@ -348,19 +348,54 @@
       }
     },
     "requestBodies": {
-      "UserArray": {
-        "description": "List of user object",
+      "User": {
+        "description": "User details",
         "content": {
           "application/json": {
             "schema": {
-              "type": "array",
+              "type": "object",
               "items": {
                 "$ref": "#/components/schemas/User"
+              }
+            },
+            "examples": {
+              "userExample": {
+                "summary": "User seed example",
+                "value": {
+                  "username": ["user1", "user2", "user3"],
+                  "email": ["user1@example.com", "user2@example.com", "user3@example.com"],
+                  "password1": ["password", "12345", "54321"],
+                  "password2": ["password", "12345", "54321"]
+                }
               }
             }
           }
         }
-      }
+      },
+      "Table": {
+        "description": "Table details",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "items": {
+                "$ref": "#/components/schemas/Table"
+              }
+            },
+            "examples": {
+              "tableExample": {
+                "summary": "Table seed example",
+                "value": {
+                  "id": ["1", "2", "3"],
+                  "name": ["product1", "product2", "product3"],
+                  "info": ["info1", "info2", "info3"],
+                  "price": ["12", "23", "45"]
+                }
+              }
+            }
+          }
+        }
+      }    
     }
   }
 }

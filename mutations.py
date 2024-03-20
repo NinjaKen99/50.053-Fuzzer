@@ -115,7 +115,7 @@ class mutation:
     
     # Change a single byte in test case
     @staticmethod
-    def random_byte (input = "testing"): 
+    def random_byte (input = "testing"):
         b, number, datatype = mutation.convert_bytes(input)
         # Create a byte for replacement
         replacement = ""

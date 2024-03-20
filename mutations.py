@@ -55,7 +55,7 @@ class mutation:
             output = mutation.bytes_to_int(input)
         return output
     
-    ### HERE IS WHERE ALL FUNCTIONS TO PERFORM A MUTATION SHALL BE MADE
+    ### FUNCTIONS THAT PERFORM MUTATIONS ON BINARY BYTES
     # Flip a set number of consecutive bits within a byte
     @staticmethod
     def bitflip (input = "testing"):
@@ -109,7 +109,7 @@ class mutation:
             b3.append(b1[i])
         b3.append(b2[extract])
         for i in range(insertion, number1):
-            b3.append[b1[i]]
+            b3.append(b1[i])
         output = ''.join([chr(int(x, 2)) for x in b3])
         return output
     
@@ -153,6 +153,32 @@ class mutation:
     #def overwrite_bytes (input = ""):
         # Similar to random
     #    return input
+    
+    ##### ASCII OPERATIONS #####
+    @staticmethod
+    def str_to_ascii(input):
+        output = []
+        count = 0
+        for character in input:
+            output.append(ord(character))
+            count += 1
+        return output, count
+    
+    @staticmethod
+    def int_to_ascii(input):
+        string = str(input)
+        output, count = mutation.str_to_ascii(input)
+        return output, count
+    
+    @staticmethod
+    def ascii_to_str(input):
+        return ''.join(map(chr,input))
+    
+    @staticmethod
+    def ascii_to_int(input):
+        numstr = mutation.ascii_to_str(input)
+        return int(numstr)
+
 
 
 #testing = int

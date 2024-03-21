@@ -154,7 +154,7 @@ class mutation:
         # Similar to random
     #    return input
     
-    ##### ASCII OPERATIONS #####
+    ########## ASCII OPERATIONS ##########
     @staticmethod
     def str_to_ascii(input):
         output = []

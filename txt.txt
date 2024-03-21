@@ -1,0 +1,129 @@
+Service
+UUID-16:1801 (Generic Attribute)
+UUID-16:2800 (Primary Service)
+b'\x01\x18'
+     Characteristic
+     UUID-16:2A05 (Service Changed)
+     INDICATE
+         Descriptor
+         UUID-16:2902 (Client Characteristic Configuration)
+         b'\x00\x00'
+     Characteristic
+     UUID-16:2B29 (Client Supported Features)
+     READ|WRITE
+     b'\x00'
+     Characteristic
+     UUID-16:2B2A (Database Hash)
+     READ
+     b'n\x97\xd8N\xf4 Ez\xd9\xaf\xb1\xffxf \x04'
+Service
+UUID-16:1800 (Generic Access)
+UUID-16:2800 (Primary Service)
+b'\x00\x18'
+     Characteristic
+     UUID-16:2A00 (Device Name)
+     READ
+     b'Zephyr test'
+     Characteristic
+     UUID-16:2A01 (Appearance)
+     READ
+     b'A\x03'
+     Characteristic
+     UUID-16:2A04 (Peripheral Preferred Connection Parameters)
+     READ
+     b'\x18\x00(\x00\x00\x00*\x00'
+Service
+UUID-16:180F (Battery)
+UUID-16:2800 (Primary Service)
+b'\x0f\x18'
+     Characteristic
+     UUID-16:2A19 (Battery Level)
+     READ|NOTIFY
+     b'c'
+         Descriptor
+         UUID-16:2902 (Client Characteristic Configuration)
+         b'\x00\x00'
+         Descriptor
+         UUID-16:2904 (Characteristic Format)
+         b"\x04\x00\xad'\x01\x06\x01"
+Service
+UUID-16:1805 (Current Time)
+UUID-16:2800 (Primary Service)
+b'\x05\x18'
+     Characteristic
+     UUID-16:2A2B (Current Time)
+     READ|WRITE|NOTIFY
+     b'\xdf\x07\x05\x1e\x0c-\x1e\x01\x00\x00'
+         Descriptor
+         UUID-16:2902 (Client Characteristic Configuration)
+         b'\x00\x00'
+Service
+UUID-16:180A (Device Information)
+UUID-16:2800 (Primary Service)
+b'\n\x18'
+     Characteristic
+     UUID-16:2A24 (Model Number String)
+     READ
+     b'inf_clock'
+     Characteristic
+     UUID-16:2A29 (Manufacturer Name String)
+     READ
+     b'Manufacturer'
+     Characteristic
+     UUID-16:2A50 (PnP ID)
+     READ
+     b'\x01\x00\x00\x00\x00\x01\x00'
+Service
+UUID-16:180D (Heart Rate)
+UUID-16:2800 (Primary Service)
+b'\r\x18'
+     Characteristic
+     UUID-16:2A37 (Heart Rate Measurement)
+     NOTIFY
+         Descriptor
+         UUID-16:2902 (Client Characteristic Configuration)
+         b'\x00\x00'
+     Characteristic
+     UUID-16:2A38 (Body Sensor Location)
+     READ
+     b'\x01'
+     Characteristic
+     UUID-16:2A39 (Heart Rate Control Point)
+     WRITE
+Service
+UUID-16:1802 (Immediate Alert)
+UUID-16:2800 (Primary Service)
+b'\x02\x18'
+     Characteristic
+     UUID-16:2A06 (Alert Level)
+     WRITE_WITHOUT_RESPONSE
+Service
+12345678-1234-5678-1234-56789ABCDEF0
+UUID-16:2800 (Primary Service)
+b'\xf0\xde\xbc\x9axV4\x12xV4\x12xV4\x12'
+     Characteristic
+     12345678-1234-5678-1234-56789ABCDEF1
+     READ|WRITE|INDICATE
+         Descriptor
+         UUID-16:2902 (Client Characteristic Configuration)
+         b'\x00\x00'
+     Characteristic
+     12345678-1234-5678-1234-56789ABCDEF2
+     READ|WRITE
+     Characteristic
+     12345678-1234-5678-1234-56789ABCDEF3
+     READ|WRITE|EXTENDED_PROPERTIES
+     b'Vendor data1Vendor dat'
+         Descriptor
+         UUID-16:2900 (Characteristic Extended Properties)
+         b'\x01\x00'
+     Characteristic
+     13345678-1234-5678-1334-56789ABCDEF3
+     READ|WRITE|AUTHENTICATED_SIGNED_WRITES
+     b'\x00\x00\x00\x00'
+     Characteristic
+     12345678-1234-5678-1234-56789ABCDEF4
+     WRITE_WITHOUT_RESPONSE
+     Characteristic
+     12345678-1234-5678-1234-56789ABCDEF5
+     WRITE

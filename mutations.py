@@ -4,6 +4,10 @@ from random import randint
 # Re-used variables
 choices = [1, 2, 4]
 bits_in_byte = 8
+ascii_max = 256
+ascii_uppercase_range = [65, 90]
+ascii_lowercase_range = [97, 122]
+ascii_number_range = [48, 57]
 
 
 class mutation:

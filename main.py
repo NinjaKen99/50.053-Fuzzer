@@ -12,6 +12,10 @@ import assign_energy
 from mutations import mutation
 from openapi_parser import parse
 from openapiparser import parse_openapi
+from zephyr.input import BLEClient
+from bumble.gatt import Service, Characteristic, Descriptor
+from bumble.gatt_client import ServiceProxy, CharacteristicProxy, DescriptorProxy
+from bumble.att import Attribute
 
 
 def random_key(dictionary):
@@ -51,6 +55,74 @@ def choose_next(SeedQ):
     return random.choice(SeedQ)
 
 
+async def seed_and_mutate_openapi(SeedQ: dict, FailureQ: dict):
+    # TODO ChooseNext from SeedQ
+    path = random_key(SeedQ)
+    if SeedQ[path] == {}:
+        SeedQ.pop(path)
+        return None, None, None, None
+
+    if path not in FailureQ:
+        FailureQ[path] = {}
+
+    method = random_key(SeedQ[path])
+
+    if method not in FailureQ[path]:
+        FailureQ[path][method] = {}
+    # AssignEnergy
+    energy = assign_energy.AssignEnergy(SeedQ[path][method])
+    for _ in range(energy):
+        # TODO mutate input
+        payload = SeedQ[path][method]
+        context = method
+        inputs = dict()
+        for x in payload:
+            if payload[x]["type"] == "integer":
+                payload[x]["value"] = mutation.random_byte(int(payload[x]["value"]))
+                inputs[x] = payload[x]["value"]
+            else:
+                # payload[x]["value"] = mutation.random_byte(payload[x]["value"])
+                payload[x]["value"] = "".join(
+                    random.choices(
+                        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
+                        k=random.randint(
+                            payload[x]["min_length"], payload[x]["max_length"]
+                        ),
+                    )
+                )
+                inputs[x] = payload[x]["value"]
+
+            context += f", {x}={payload[x]}"
+    return inputs, path, method, context
+
+
+async def seed_and_mutate_ble(SeedQ: dict, FailureQ: dict):
+    service = random_key(SeedQ["services"])
+    if SeedQ["services"][service]["characteristics"] == {}:
+        SeedQ["services"].pop(service)
+        return None, None, None, None
+    characteristic = random_key(SeedQ["services"][service]["characteristics"])
+    if (
+        Attribute.Permissions.WRITEABLE
+        == SeedQ["services"][service]["characteristics"][characteristic]["permissions"]
+    ):
+        # Generate a random byte (integer between 0 and 255)
+        random_byte = random.randint(0, 255)
+
+        # If you need to convert it to a bytes object, you can use the bytes() constructor
+        random_byte_as_bytes = bytes([random_byte])
+        # input = SeedQ["services"][service]["characteristics"][characteristic]["value"]
+        input = random_byte_as_bytes
+        return (
+            input,
+            SeedQ["services"][service]["object"],
+            SeedQ["services"][service]["characteristics"][characteristic]["object"],
+            {},
+        )
+    else:
+        return None, None, None, None
+
+
 async def main():
 
     # Specify the directory where you want to delete files
@@ -71,30 +143,38 @@ async def main():
         FailureQ = {}
         parser = argparse.ArgumentParser(description="Description of your script")
         parser.add_argument("arg1", type=str, help="Protocol of Request")
-        parser.add_argument("arg2", type=str, help="OpenAPI 3.03 json file")
+        parser.add_argument(
+            "--file", type=str, help="OpenAPI 3.03 json file", required=False
+        )
         parser.add_argument(
             "--nocoverage", action="store_true", help="Disable code coverage"
         )
         args = parser.parse_args()
-        try:
-            grammar = parse(args.arg2)
-
-        except Exception as e:
-            print(e)
-            exit(1)
+        # Check if the --file argument is provided
+        if args.file:
+            # Use the value of the --file argument in the parse function
+            grammar = parse(args.file)
+            url = grammar.servers[0]
+        else:
+            print("No --file argument provided.")
         # with open(args.arg3) as f:
         #     # Load the JSON data
         #     dictionary = json.load(f)
-
-        url = grammar.servers[0]
 
         match args.arg1:
 
             case "coap":
                 client = COAPClient(url.url)
+                SeedQ = parse_openapi(grammar)
 
             case "http":
                 client = DjangoClient(url.url)
+                SeedQ = parse_openapi(grammar)
+
+            case "ble":
+                client = BLEClient(9000)
+                await client.initalize_transport()
+                SeedQ = await client.get_services()
 
             case _:
                 raise ValueError("Invalid protocol")
@@ -103,50 +183,20 @@ async def main():
         # load all examples/inputs into SeedQ
         # select random path and method in grammar
 
-        SeedQ = parse_openapi(grammar)
         await asyncio.sleep(2)
         while SeedQ:
-            # TODO ChooseNext from SeedQ
-
-            path = random_key(SeedQ)
-            if SeedQ[path] == {}:
-                SeedQ.pop(path)
-                continue
-
-            if path not in FailureQ:
-                FailureQ[path] = {}
-
-            method = random_key(SeedQ[path])
-
-            if method not in FailureQ[path]:
-                FailureQ[path][method] = {}
-            # AssignEnergy
-            energy = assign_energy.AssignEnergy(SeedQ[path][method])
-            for _ in range(energy):
-                # TODO mutate input
-                payload = SeedQ[path][method]
-                context = method
-                inputs = dict()
-                for x in payload:
-                    if payload[x]["type"] == "integer":
-                        payload[x]["value"] = mutation.random_byte(
-                            int(payload[x]["value"])
-                        )
-                        inputs[x] = payload[x]["value"]
-                    else:
-                        # payload[x]["value"] = mutation.random_byte(payload[x]["value"])
-                        payload[x]["value"] = "".join(
-                            random.choices(
-                                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",
-                                k=random.randint(
-                                    payload[x]["min_length"], payload[x]["max_length"]
-                                ),
-                            )
-                        )
-                        inputs[x] = payload[x]["value"]
-
-                    context += f", {x}={payload[x]}"
-                if no_coverage == False:
+            if args.arg1 == "coap" or args.arg1 == "http":
+                inputs, path, method, context = await seed_and_mutate_openapi(
+                    SeedQ, FailureQ
+                )
+                if (
+                    inputs == None
+                    and path == None
+                    and method == None
+                    and context == None
+                ):
+                    continue
+                elif no_coverage == False:
                     try:
                         server_process = await client.call_process(context)
                     except Exception as e:
@@ -155,8 +205,8 @@ async def main():
                     await asyncio.sleep(2)
                 # pid = server_process.pid
                 response_payload, status_code = await client.send_payload(
-                    inputs, path, method
-                )
+                        inputs, path, method
+                    )
                 # Check if the process has terminated
                 if no_coverage == False:
                     if server_process.poll() is not None:
@@ -166,26 +216,33 @@ async def main():
                         server_process.send_signal(signal.SIGINT)
                         await asyncio.sleep(1)
 
-                # backendcov = coverage.CoverageData("./.coverage")
-                # backendcov.read()
-                # print(backendcov.measured_files())
-                # print(backendcov.measured_contexts())
-                # for x in backendcov.measured_files():
-                #     print(backendcov.lines(x))
+            elif args.arg1 == "ble":
+                inputs, path, method, context = await seed_and_mutate_ble(
+                    SeedQ, FailureQ
+                )
+                if (
+                    inputs == None
+                    and path == None
+                    and method == None
+                    and context == None
+                ):
+                    continue
+                driver = client.send_payload(inputs, path, method)
+                zephyr = await client.call_process()
+                response_payload, status_code = await driver
+                zephyr.terminate()
+                
+                
+                
 
-                # cov.stop()
-                # print(cov.get_data().measured_files())
-                # for x in cov.get_data().measured_files():
-                #     print(x)
-                #     print(cov.get_data().lines(x))
-                # TODO isInteresting
-                if is_interesting(response_payload, status_code):
-                    print("Interesting finding! Adding to the FailureQ.")
-                    if status_code not in FailureQ[path][method]:
-                        FailureQ[path][method][status_code] = []
-                    FailureQ[path][method][status_code].append(
-                        (payload, response_payload)
-                    )
+ 
+
+            # TODO isInteresting
+            if is_interesting(response_payload, status_code):
+                print("Interesting finding! Adding to the FailureQ.")
+                if status_code not in FailureQ[path][method]:
+                    FailureQ[path][method][status_code] = []
+                FailureQ[path][method][status_code].append((inputs, response_payload))
     except Exception as e:
         print(f"An error occurred: {e}")
         raise e

@@ -21,6 +21,7 @@ from bumble.utils import AsyncRunner
 from bumble.colors import color
 import subprocess
 from bumble.gatt_client import ServiceProxy, CharacteristicProxy, DescriptorProxy, UUID
+from lcovparser import parse_file
 
 
 async def write_target(target, attribute, bytes):
@@ -329,6 +330,11 @@ class BLEClient:
 
 # -----------------------------------------------------------------------------
 logging.basicConfig(level=os.environ.get("BUMBLE_LOGLEVEL", "INFO").upper())
+
+file = parse_file("../lcov.info", ignore_incorrect_counts=True, merge_duplicate_line_hit_counts=True)
+print(file)
+
+
 #services = asyncio.run(BLEClient(9000).get_services())
 # x: ServiceProxy
 # for x in services["services"]:

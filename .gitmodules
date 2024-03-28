@@ -2,6 +2,6 @@
 	path = zephyr/lcovparser
 	url = https://github.com/ChrisTimperley/lcovparser.py
 
-[submodule "zephyr/bumble"]
+[submodule "bumble"]
 	path = zephyr/bumble
 	url = https://github.com/google/bumble

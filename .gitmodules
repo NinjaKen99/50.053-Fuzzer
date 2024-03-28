@@ -1,6 +1,3 @@
-[submodule "zephyr/lcovparser"]
-	path = zephyr/lcovparser
-	url = https://github.com/ChrisTimperley/lcovparser.py
 [submodule "lcovparser"]
 	path = lcovparser
 	url = https://github.com/ChrisTimperley/lcovparser.py

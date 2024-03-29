@@ -55,7 +55,17 @@ class COAPClient:
             code=code, uri=f"{self.url}{uri}", payload=bytes(payload, "utf-8")
         )
         response: Message = await protocol.request(msg).response
-        return response.payload.decode(), await self.code_to_str(response.code)
+
+        # Extract coverage data from the response
+        if response.status_code == 200:
+            data = response.json()
+            coverage_data = data.get('coverage', {})
+            # Return coverage data along with other response details
+            return response.payload.decode(), await self.code_to_str(response.code), coverage_data
+        else:
+            return response.payload.decode(), await self.code_to_str(response.code), None
+
+        
 
 
 # async def main():

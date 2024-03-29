@@ -1,3 +1,4 @@
+import time
 import argparse
 import asyncio
 import json
@@ -17,6 +18,8 @@ from bumble.gatt import Service, Characteristic, Descriptor
 from bumble.gatt_client import ServiceProxy, CharacteristicProxy, DescriptorProxy
 from bumble.att import Attribute
 
+# Global dictionary to store coverage data
+coverage_data_store = {}
 
 def random_key(dictionary):
     return random.choice(list(dictionary.keys()))
@@ -124,6 +127,7 @@ async def seed_and_mutate_ble(SeedQ: dict, FailureQ: dict):
 
 
 async def main():
+    global coverage_data_store
 
     # Specify the directory where you want to delete files
     directory = "./coverages"
@@ -204,9 +208,12 @@ async def main():
                         raise e
                     await asyncio.sleep(2)
                 # pid = server_process.pid
-                response_payload, status_code = await client.send_payload(
+                response_payload, status_code, coverage_data = await client.send_payload(
                         inputs, path, method
                     )
+                request_key = f"{path}_{method}_{int(time.time())}"
+                coverage_data_store[request_key] = coverage_data
+
                 # Check if the process has terminated
                 if no_coverage == False:
                     if server_process.poll() is not None:
@@ -232,10 +239,6 @@ async def main():
                 response_payload, status_code = await driver
                 zephyr.terminate()
                 
-                
-                
-
- 
 
             # TODO isInteresting
             if is_interesting(response_payload, status_code):

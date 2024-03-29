@@ -56,8 +56,16 @@ class DjangoClient:
                     response =  await self.client.put(registration_url, json=input,  follow_redirects=True)
                 case "delete":
                     response =  await self.client.delete(registration_url,  follow_redirects=True)
+
+            # Extract coverage data from the response
+            if response.status_code == 200:
+                data = response.json()
+                coverage_data = data.get('coverage', {})
+                # Return coverage data along with other response details
+                return response.reason_phrase, response.status_code, coverage_data
+            else:
+                return response.reason_phrase, response.status_code, None
                 
-            return response.reason_phrase, response.status_code
         except requests.exceptions.RequestException as e:
             print("User registration request failed:", e)
             return None, None

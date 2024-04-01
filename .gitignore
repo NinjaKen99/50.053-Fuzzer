@@ -6,3 +6,4 @@ db.sqlite3
 .coveragerc
 htmlcov/
 coverages/.coverage*
+**/*.gcda

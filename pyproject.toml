@@ -4,7 +4,6 @@ version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-packages = [{include = "50"}]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
@@ -13,11 +12,11 @@ aiocoap = {extras = ["ws"], version = "^0.4.7"}
 httpx = {extras = ["cli"], version = "^0.26.0"}
 openapi3-parser = "^1.1.17"
 python-dotenv = "^1.0.1"
-bumble = {path = "zephyr/bumble"}
 coverage-lcov = "^0.2.5"
 toml = "^0.10.2"
 coverage = "^6"
 lcovparser = {path = "zephyr/lcovparser"}
+bumble = {path = "zephyr/bumble"}
 
 
 [tool.poetry.group.coap.dependencies]

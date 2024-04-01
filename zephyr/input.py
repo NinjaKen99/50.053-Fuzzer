@@ -249,10 +249,15 @@ class BLEClient:
         self.hci_sink = None
 
     async def call_process(self, *args):
+        path = os.getcwd()
         process = subprocess.Popen(
-            ["./zephyr.exe", "--bt-dev=127.0.0.1:" + str(self.port)],
+            [
+                "./zephyr.exe",
+                "--bt-dev=127.0.0.1:" + str(self.port),
+            ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
+            env={"GCOV_PREFIX_STRIP": "3", "GCOV_PREFIX":path + "/targets/Zephyr"},
             cwd="targets/Zephyr",
         )
         return process

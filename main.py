@@ -16,6 +16,7 @@ from zephyr.input import BLEClient
 from bumble.gatt import Service, Characteristic, Descriptor
 from bumble.gatt_client import ServiceProxy, CharacteristicProxy, DescriptorProxy
 from bumble.att import Attribute
+from lcovparser import parse_file
 
 
 def random_key(dictionary):
@@ -231,6 +232,9 @@ async def main():
                 zephyr = await client.call_process()
                 response_payload, status_code = await driver
                 zephyr.terminate()
+                subprocess.run(["lcov", "--capture", "--directory", "./targets/Zephyr", "--output-file", "lcov.info", "-q"])
+                subprocess.run(["lcov", "--directory", "./targets/Zephyr", "--zerocounters"])
+                lcov = parse_file("./lcov.info", ignore_incorrect_counts=True, merge_duplicate_line_hit_counts=True)
                 
                 
                 

@@ -1,5 +1,8 @@
+import json
 import coverage
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.template.response import TemplateResponse
+
 
 class CoverageMiddleware:
     def __init__(self, get_response):
@@ -9,11 +12,11 @@ class CoverageMiddleware:
         self.cov.start()
 
     def __call__(self, request):
+        print("hellp")
         self.cov.stop()  # Stop the previous coverage (if any)
         self.cov.start()  # Start a new coverage measurement
 
         response = self.get_response(request)
-
         # Stop coverage measurement for the current request
         self.cov.stop()
 
@@ -23,11 +26,17 @@ class CoverageMiddleware:
         for filename in self.cov.get_data().measured_files():
             lines = self.cov.get_data().lines(filename)
             coverage_data[filename] = lines
-
         # Attach coverage data to the response
-        if 'application/json' in response['Content-Type']:
-            response_data = response.json()
-            response_data['coverage'] = coverage_data
-            response = JsonResponse(response_data)
-
+        print(type(response))
+        try:
+            if type(response) == TemplateResponse:
+                response_data = json.loads(response.content)
+                response_data["coverage"] = coverage_data
+                response = JsonResponse(response_data)
+            elif type(response) == HttpResponse:
+                response_data = response.json()
+                response_data["coverage"] = coverage_data
+                response = JsonResponse(response_data)
+        except:
+            response = JsonResponse(coverage_data)
         return response

@@ -71,7 +71,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'DjangoWebApplication.middleware.coverage_middleware.CoverageMiddleware'
+    'middleware.coverage_middleware.CoverageMiddleware'
 ]
 
 ROOT_URLCONF = "core.urls"

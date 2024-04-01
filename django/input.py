@@ -58,8 +58,10 @@ class DjangoClient:
                     response =  await self.client.delete(registration_url,  follow_redirects=True)
 
             # Extract coverage data from the response
+            print(response)
             if response.status_code == 200:
                 data = response.json()
+                print(data)
                 coverage_data = data.get('coverage', {})
                 # Return coverage data along with other response details
                 return response.reason_phrase, response.status_code, coverage_data

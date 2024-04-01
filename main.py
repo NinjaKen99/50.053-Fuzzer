@@ -211,6 +211,7 @@ async def main():
                 response_payload, status_code, coverage_data = await client.send_payload(
                         inputs, path, method
                     )
+                print(coverage_data)
                 request_key = f"{path}_{method}_{int(time.time())}"
                 coverage_data_store[request_key] = coverage_data
 

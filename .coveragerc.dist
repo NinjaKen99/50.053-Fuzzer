@@ -1,0 +1,13 @@
+[run]
+branch = true
+debug="trace"
+parallel = true
+data_file=/to/fuzzer/dir/coverages/.coverage
+
+[report]
+skip_empty = true
+show_missing = true
+ignore_errors = true
+
+[html]
+show_contexts = true

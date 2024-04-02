@@ -327,22 +327,23 @@
       "Table": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64",
-            "example": 10
-          },
           "name": {
             "type": "string",
-            "example": "theProduct"
+            "example": "theProduct",
+            "minLength": 1,
+            "maxLength": 10
+
           },
           "info": {
             "type": "string",
-            "example": "product information"
+            "example": "product information",
+            "minLength": 1,
+            "maxLength": 4
           },
           "price": {
-            "type": "string",
-            "example": "12345"
+            "type": "integer",
+            "example": 12345,
+            "format": "int64"
           }
         }
       }
@@ -386,9 +387,8 @@
               "tableExample": {
                 "summary": "Table seed example",
                 "value": {
-                  "id": ["1", "2", "3"],
                   "name": ["product1", "product2", "product3"],
-                  "info": ["info1", "info2", "info3"],
+                  "info": ["info", "ggwp", "hh", "help"],
                   "price": ["12", "23", "45"]
                 }
               }

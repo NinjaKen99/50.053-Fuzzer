@@ -10,7 +10,9 @@ __author__ = 'Giacomo Tanganelli'
 def with_coverage(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        cov = coverage.Coverage()
+        cov = coverage.Coverage(
+                config_file="../../.coveragerc", context=random.randint(1, 1000000)
+            )
         cov.start()
         try:
             result = func(*args, **kwargs)

@@ -64,9 +64,9 @@ class DjangoClient:
                 print(data)
                 coverage_data = data.get('coverage', {})
                 # Return coverage data along with other response details
-                return response.reason_phrase, response.status_code, coverage_data
+                return response.reason_phrase, response.status_code
             else:
-                return response.reason_phrase, response.status_code, None
+                return response.reason_phrase, response.status_code
                 
         except requests.exceptions.RequestException as e:
             print("User registration request failed:", e)

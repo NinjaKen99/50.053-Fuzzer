@@ -16,7 +16,6 @@ def parse_openapi(grammar:Specification):
                         "value": schema.example,
                         "type": "string",
                     }
-
                     if schema.max_length != None:
                         formatting["max_length"] = schema.max_length
                     else:
@@ -25,11 +24,16 @@ def parse_openapi(grammar:Specification):
                         formatting["min_length"] = schema.min_length
                     else:
                         formatting["min_length"] = 1
-                    SeedQ[path.url][method] = {"string": formatting}
+                    
+                    if SeedQ[path.url].get(method) == None:
+                        SeedQ[path.url][method] = []
+                    SeedQ[path.url][method].append({"string": formatting})
 
                 elif body.content[0].schema.type.value == "object":
+                    if SeedQ[path.url].get(method) == None:
+                        SeedQ[path.url][method] = []
                     object: Object = body.content[0].schema
-                    SeedQ[path.url][method] = {}
+                    current_object = dict()
                     for i in object.properties:
                         formatting = dict()
                         if i.schema.type.value == "integer":
@@ -52,5 +56,6 @@ def parse_openapi(grammar:Specification):
                                 formatting["min_length"] = schema.min_length
                             else:
                                 formatting["min_length"] = 1
-                        SeedQ[path.url][method][i.name] = formatting
+                        current_object[i.name] = formatting
+                    SeedQ[path.url][method].append(current_object)
     return SeedQ

@@ -2,6 +2,7 @@ import json
 import coverage
 from django.http import JsonResponse, HttpResponse
 from django.template.response import TemplateResponse
+from django.core.handlers.wsgi import WSGIRequest
 
 
 class CoverageMiddleware:
@@ -11,8 +12,21 @@ class CoverageMiddleware:
         # self.cov = coverage.Coverage(config_file="../../.coveragerc")
         # self.cov.start()
 
-    def __call__(self, request):
-        self.cov = coverage.Coverage(config_file="../../.coveragerc")
+    def __call__(self, request: WSGIRequest):
+        if request.method == "POST" or request.method == "PUT":
+            data = json.loads(request.body)
+            print(data)
+            string = ""
+            for x in data:
+                string += str(x) + ":" + str(data[x]) + ","
+            self.cov = coverage.Coverage(
+            config_file="../../.coveragerc", context=string
+        )
+        else:
+            self.cov = coverage.Coverage(
+                config_file="../../.coveragerc", context=request.path
+            )
+            
         self.cov.start()  # Start a new coverage measurement
 
         response = self.get_response(request)

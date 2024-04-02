@@ -57,13 +57,11 @@ class COAPClient:
         response: Message = await protocol.request(msg).response
         print(response.__dict__)
         # Extract coverage data from the response
-        if response.status_code == 200:
-            data = response.json()
-            coverage_data = data.get('coverage', {})
+        # if response.status_code == 200:
+        #     data = response.json()
+        #     coverage_data = data.get('coverage', {})
             # Return coverage data along with other response details
-            return response.payload.decode(), await self.code_to_str(response.code), coverage_data
-        else:
-            return response.payload.decode(), await self.code_to_str(response.code), None
+        return response.payload.decode(), await self.code_to_str(response.code)
 
         
 

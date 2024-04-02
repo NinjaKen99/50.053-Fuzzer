@@ -8,6 +8,7 @@ import random
 import shutil
 import signal
 import subprocess
+import time
 from coap.input import COAPClient
 from django.input import DjangoClient
 import assign_energy
@@ -55,7 +56,7 @@ def random_key(dictionary):
 
 
 #     return False
-def get_latest_file(directory):
+async def get_latest_file(directory):
     """
     Returns the latest modified file in the specified directory.
     """
@@ -67,36 +68,35 @@ def get_latest_file(directory):
 
     if not files:
         return None
-
     latest_file = max(files, key=lambda x: x[0])[1]
     return latest_file
 
 
-def get_coverage_for_file(filename):
-    """
-    Retrieve coverage data for a specified file from the .coverage data file.
-    Returns a list of line numbers that have been covered.
-    """
-    try:
-        cov = coverage.Coverage()
-        cov.load()
-        file_coverage = cov.get_data().lines(filename)
-        return file_coverage
-    except coverage.CoverageException:
-        print(f"No coverage information found for file: {filename}")
-        return None
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        return None
+# def get_coverage_for_file(filename):
+#     """
+#     Retrieve coverage data for a specified file from the .coverage data file.
+#     Returns a list of line numbers that have been covered.
+#     """
+#     try:
+#         cov = coverage.Coverage()
+#         cov.load()
+#         file_coverage = cov.get_data().lines(filename)
+#         return file_coverage
+#     except coverage.CoverageException:
+#         print(f"No coverage information found for file: {filename}")
+#         return None
+#     except Exception as e:
+#         print(f"An unexpected error occurred: {e}")
+#         return None
 
 
-def get_coverage_data():
+async def get_coverage_data():
     """
     Retrieves coverage data without combining data files.
     Returns a dictionary with file paths as keys and coverage data as values.
     """
     # Example usage
-    latest_file_path = get_latest_file("./coverages")
+    latest_file_path = await get_latest_file("./coverages")
 
     cov = coverage.Coverage(
         data_file=latest_file_path, config_file="./.coveragerc", auto_data=True
@@ -112,7 +112,7 @@ def get_coverage_data():
     return coverage_dict
 
 
-def has_new_coverage(total_coverage_data: dict, current_coverage_data: dict):
+async def has_new_coverage(total_coverage_data: dict, current_coverage_data: dict):
     is_interesting = False
     """Compare old and new coverage data to determine if any new lines of code are covered, and updates the total coverage data"""
     for file, current_cover in current_coverage_data.items():
@@ -126,7 +126,7 @@ def has_new_coverage(total_coverage_data: dict, current_coverage_data: dict):
     return is_interesting
 
 
-def is_interesting(total_coverage_data, current_coverage_data):
+async def is_interesting(total_coverage_data, current_coverage_data):
     """
     Check if the response indicates a potential error, contains sensitive information,
     or if new coverage was detected.
@@ -154,7 +154,7 @@ def is_interesting(total_coverage_data, current_coverage_data):
     #     return True
 
     # Check for new coverage
-    new_coverage = has_new_coverage(total_coverage_data, current_coverage_data)
+    new_coverage = await has_new_coverage(total_coverage_data, current_coverage_data)
     if new_coverage:
         print("New code coverage detected, which is interesting.")
         return True
@@ -163,7 +163,6 @@ def is_interesting(total_coverage_data, current_coverage_data):
 
 
 async def choose_next_method(SeedQ, FailureQ):
-    # TODO ChooseNext from SeedQ
     path = random_key(SeedQ)
     if SeedQ[path] == {}:
         SeedQ.pop(path)
@@ -178,7 +177,6 @@ async def choose_next_method(SeedQ, FailureQ):
 
 
 async def mutate_openapi(original_input):
-    # TODO mutate input
     muatated_input = dict()
     for x in original_input:
         muatated_input[x] = copy.deepcopy(original_input[x])
@@ -205,7 +203,7 @@ async def add_to_SeedQ(SeedQ, path, method, mutated_input_seed):
     SeedQ[path][method].append(mutated_input_seed)
 
 
-async def seed_and_mutate_ble(SeedQ: dict, FailureQ: dict):
+async def seed_and_mutate_ble(SeedQ: dict):
     service = random_key(SeedQ["services"])
     if SeedQ["services"][service]["characteristics"] == {}:
         SeedQ["services"].pop(service)
@@ -264,6 +262,9 @@ async def initalize():
         # Use the value of the --file argument in the parse function
         grammar = parse(args.file)
         url = grammar.servers[0]
+    elif args.arg1 == "ble":
+        grammar = None
+        url = None
     else:
         raise ValueError("no file argument provided")
 
@@ -278,6 +279,7 @@ async def initalize():
             SeedQ = parse_openapi(grammar)
 
         case "ble":
+            raise ValueError("BLE not implemented")
             client = BLEClient(9000)
             await client.initalize_transport()
             SeedQ = await client.get_services()
@@ -294,19 +296,25 @@ async def initalize():
 async def main():
     SeedQ, FailureQ, client, no_coverage, total_coverage_data, args = await initalize()
     try:
-        server_process = await client.call_process("django")
+        server_process = await client.call_process("main_program")
         await asyncio.sleep(1)
     except Exception as e:
         print(e + " " + "Not able to run server, please set --no-coverage")
         raise e
     try:
         while SeedQ:
+            print(SeedQ)
             # AssignEnergy
-            path, method = await choose_next_method(SeedQ, FailureQ)
-            if path == None and method == None:
-                continue
-            # Choose input
-            original_input = random.choice(SeedQ[path][method])
+            if args.arg1 == "coap" or args.arg1 == "http":
+                path, method = await choose_next_method(SeedQ, FailureQ)
+                if path == None and method == None:
+                    continue
+                # Choose input
+                original_input = random.choice(SeedQ[path][method])
+            elif args.arg1 == "ble":
+                #TODO choose next service/charactistics to fuzz
+                original_input = await seed_and_mutate_ble(SeedQ, FailureQ)
+
             energy = assign_energy.AssignEnergy(original_input)
             for _ in range(energy):
 
@@ -316,7 +324,7 @@ async def main():
                     mutated_input = {}
                     for x in mutated_input_seed:
                         mutated_input[x] = mutated_input_seed[x]["value"]
-                    
+
                     response_payload, status_code = await client.send_payload(
                         mutated_input, path, method
                     )
@@ -331,41 +339,45 @@ async def main():
                                 (mutated_input_seed, response_payload)
                             )
                             server_process = await client.call_process("django")
+                    
+                    #IsInteresting
+                    current_coverage_data = await get_coverage_data()
+                    if await is_interesting(
+                        total_coverage_data,
+                        current_coverage_data,
+                    ):
+                        # Add to SeedQ
+                        await add_to_SeedQ(SeedQ, path, method, mutated_input_seed)
+                        
+                        
+                
+                elif args.arg1 == "ble":
+                    inputs, path, method, context = await seed_and_mutate_ble(
+                        SeedQ, FailureQ
+                    )
+                    if (
+                        inputs == None
+                        and path == None
+                        and method == None
+                        and context == None
+                    ):
+                        continue
+                    print(SeedQ)
+                    driver = client.send_payload(inputs, path, method)
+                    zephyr = await client.call_process()
+                    response_payload, status_code = await driver
+                    zephyr.terminate()
+                    #TODO add in isinteresting for SeedQ and FailureQ
+                    
 
-                # TODO add back ble
-                # elif args.arg1 == "ble":
-                #     inputs, path, method, context = await seed_and_mutate_ble(
-                #         SeedQ, FailureQ
-                #     )
-                #     if (
-                #         inputs == None
-                #         and path == None
-                #         and method == None
-                #         and context == None
-                #     ):
-                #         continue
-
-                #     driver = client.send_payload(inputs, path, method)
-                #     zephyr = await client.call_process()
-                #     response_payload, status_code = await driver
-                #     zephyr.terminate()
-
-                # TODO isInteresting
-                current_coverage_data = get_coverage_data()
-                if is_interesting(
-                    total_coverage_data,
-                    current_coverage_data,
-                ):
-                    # Add to SeedQ
-                    await add_to_SeedQ(SeedQ, path, method, mutated_input_seed)
-                    # TODO add catches for crashes
+    except KeyboardInterrupt as e:
+        print(e)
 
     except Exception as e:
         print(f"{traceback.format_exc()}")
-        raise
+        
     finally:
         try:
-
             print("\nShutting Down Server! please wait...")
             server_process.send_signal(signal.SIGINT)
             await asyncio.sleep(2)
@@ -405,6 +417,8 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    # file = asyncio.run(get_latest_file("./coverages"))
+    # os.remove(file)
     subprocess.run(["coverage", "combine", "--rcfile=./.coveragerc"])
     subprocess.run(["coverage", "report"])
 

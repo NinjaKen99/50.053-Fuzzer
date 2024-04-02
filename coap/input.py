@@ -27,6 +27,7 @@ class COAPClient:
             ],
             cwd="./targets/CoAPthon",
             preexec_fn=os.setpgrp,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
 
     async def str_to_code(self, code: str):

@@ -10,8 +10,13 @@ __author__ = 'Giacomo Tanganelli'
 def with_coverage(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        request = kwargs.get("request")
+        payload = request.payload
+        if isinstance(payload, str):
+            # Convert bytes to Unicode string
+            payload = payload.decode('utf-8')
         cov = coverage.Coverage(
-                config_file="../../.coveragerc", context=random.randint(1, 1000000)
+                config_file="../../.coveragerc", context=payload
             )
         cov.start()
         try:

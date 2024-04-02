@@ -328,7 +328,7 @@ class BLEClient:
 
 
 # -----------------------------------------------------------------------------
-logging.basicConfig(level=os.environ.get("BUMBLE_LOGLEVEL", "INFO").upper())
+#logging.basicConfig(level=os.environ.get("BUMBLE_LOGLEVEL", "INFO").upper())
 #services = asyncio.run(BLEClient(9000).get_services())
 # x: ServiceProxy
 # for x in services["services"]:

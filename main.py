@@ -161,6 +161,7 @@ async def main():
             url = grammar.servers[0]
         else:
             print("No --file argument provided.")
+            return parser.error("Please provide an OpenAPI 3.03 json file.")
         # with open(args.arg3) as f:
         #     # Load the JSON data
         #     dictionary = json.load(f)
@@ -186,7 +187,12 @@ async def main():
 
         # load all examples/inputs into SeedQ
         # select random path and method in grammar
-
+        try:
+            server_process = await client.call_process(100)
+        except Exception as e:
+            print(e + " " + "Not able to run server, please set --no-coverage")
+            raise e
+        await asyncio.sleep(2)
         await asyncio.sleep(2)
         while SeedQ:
             if args.arg1 == "coap" or args.arg1 == "http":
@@ -200,13 +206,8 @@ async def main():
                     and context == None
                 ):
                     continue
-                elif no_coverage == False:
-                    try:
-                        server_process = await client.call_process(context)
-                    except Exception as e:
-                        print(e + " " + "Not able to run server, please set --no-coverage")
-                        raise e
-                    await asyncio.sleep(2)
+                # elif no_coverage == False:
+
                 # pid = server_process.pid
                 response_payload, status_code, coverage_data = await client.send_payload(
                         inputs, path, method
@@ -215,14 +216,14 @@ async def main():
                 request_key = f"{path}_{method}_{int(time.time())}"
                 coverage_data_store[request_key] = coverage_data
 
-                # Check if the process has terminated
-                if no_coverage == False:
-                    if server_process.poll() is not None:
-                        pass
-                        print("Server crashed!")
-                    else:
-                        server_process.send_signal(signal.SIGINT)
-                        await asyncio.sleep(1)
+                # # Check if the process has terminated
+                # if no_coverage == False:
+                #     if server_process.poll() is not None:
+                #         pass
+                #         print("Server crashed!")
+                #     else:
+                #         server_process.send_signal(signal.SIGINT)
+                #         await asyncio.sleep(1)
 
             elif args.arg1 == "ble":
                 inputs, path, method, context = await seed_and_mutate_ble(

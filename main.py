@@ -1,4 +1,3 @@
-import time
 import argparse
 import asyncio
 import json
@@ -17,41 +16,120 @@ from zephyr.input import BLEClient
 from bumble.gatt import Service, Characteristic, Descriptor
 from bumble.gatt_client import ServiceProxy, CharacteristicProxy, DescriptorProxy
 from bumble.att import Attribute
-
-# Global dictionary to store coverage data
-coverage_data_store = {}
+import re
+import subprocess
+import coverage
 
 def random_key(dictionary):
     return random.choice(list(dictionary.keys()))
 
 
-def is_interesting(response_payload, status_code):
-    """Check if the response indicates a potential error or contains sensitive information."""
-    # Check if the status code indicates a server error
-    if status_code == None:
-        return False
-    status_code = int(status_code)
-    if status_code >= 300:
-        print("Found a potential server error.")
+# def is_interesting(response_payload, status_code):
+#     """Check if the response indicates a potential error or contains sensitive information."""
+#     # Check if the status code indicates a server error
+#     if status_code == None:
+#         return False
+#     status_code = int(status_code)
+#     if status_code >= 300:
+#         print("Found a potential server error.")
+#         return True
+
+#     # Check for indicators of errors or sensitive information in the response
+#     error_indicators = ["exception", "error", "unhandled", "failure"]
+#     sensitive_info_indicators = ["password", "username", "private key", "API key"]
+
+#     # Check for error indicators
+#     if any(indicator in response_payload.lower() for indicator in error_indicators):
+#         print("Found a potential error indicator in the response.")
+#         return True
+
+#     # Check for sensitive information indicators
+#     if any(
+#         indicator in response_payload.lower() for indicator in sensitive_info_indicators
+#     ):
+#         print("Found potential sensitive information in the response.")
+#         return True
+
+#     return False
+
+def get_coverage_for_file(filename):
+    """
+    Retrieve coverage data for a specified file from the .coverage data file.
+    Returns a list of line numbers that have been covered.
+    """
+    try:
+        cov = coverage.Coverage()
+        cov.load()
+        file_coverage = cov.get_data().lines(filename)
+        return file_coverage
+    except coverage.CoverageException:
+        print(f"No coverage information found for file: {filename}")
+        return None
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return None
+def get_coverage_data():
+    """
+    Retrieves coverage data without combining data files.
+    Returns a dictionary with file paths as keys and coverage data as values.
+    """
+    cov = coverage.Coverage()
+    cov.load()
+    cov_data = cov.get_data()
+    coverage_dict = {}
+
+    for filename in cov_data.measured_files():
+        lines = cov_data.lines(filename)
+        coverage_dict[filename] = lines
+
+    return coverage_dict
+
+def has_new_coverage(previous_coverage_data, current_coverage_data):
+    """Compare old and new coverage data to determine if any new lines of code are covered."""
+    for file, current_cover in current_coverage_data.items():
+        previous_cover = previous_coverage_data.get(file, 0)
+        # If the current coverage is greater than the previous coverage, a new line of code is considered covered
+        if current_cover > previous_cover:
+            return True
+    return False
+
+def is_interesting(response_payload, status_code, previous_coverage_data, current_coverage_data):
+    """
+    Check if the response indicates a potential error, contains sensitive information,
+    or if new coverage was detected.
+    """
+    # Check if the status code is None or non-standard for successful responses
+    if status_code is None or not (200 <= int(status_code) < 300):
+        print("Found a non-successful status code.")
         return True
 
+    # Lowercase payload for case-insensitive searching
+    lower_payload = response_payload.lower()
+
     # Check for indicators of errors or sensitive information in the response
-    error_indicators = ["exception", "error", "unhandled", "failure"]
-    sensitive_info_indicators = ["password", "username", "private key", "API key"]
+    error_indicators = ["exception", "error", "unhandled", "failure", "traceback"]
+    sensitive_info_indicators = ["password", "username", "private key", "API key", "secret"]
 
     # Check for error indicators
-    if any(indicator in response_payload.lower() for indicator in error_indicators):
+    if any(indicator in lower_payload for indicator in error_indicators):
         print("Found a potential error indicator in the response.")
         return True
 
     # Check for sensitive information indicators
-    if any(
-        indicator in response_payload.lower() for indicator in sensitive_info_indicators
-    ):
+    if any(indicator in lower_payload for indicator in sensitive_info_indicators):
         print("Found potential sensitive information in the response.")
         return True
 
+    # Check for new coverage
+    new_coverage = has_new_coverage(previous_coverage_data, current_coverage_data)
+    if new_coverage:
+        print("New code coverage detected, which is interesting.")
+        return True
+
+    # No indicators of interest found
     return False
+
+
 
 
 def choose_next(SeedQ):
@@ -127,10 +205,11 @@ async def seed_and_mutate_ble(SeedQ: dict, FailureQ: dict):
 
 
 async def main():
-    global coverage_data_store
 
     # Specify the directory where you want to delete files
     directory = "./coverages"
+    
+
 
     # List all files in the directory
     files = os.listdir(directory)
@@ -161,7 +240,6 @@ async def main():
             url = grammar.servers[0]
         else:
             print("No --file argument provided.")
-            return parser.error("Please provide an OpenAPI 3.03 json file.")
         # with open(args.arg3) as f:
         #     # Load the JSON data
         #     dictionary = json.load(f)
@@ -187,13 +265,9 @@ async def main():
 
         # load all examples/inputs into SeedQ
         # select random path and method in grammar
-        try:
-            server_process = await client.call_process(100)
-        except Exception as e:
-            print(e + " " + "Not able to run server, please set --no-coverage")
-            raise e
+
         await asyncio.sleep(2)
-        await asyncio.sleep(2)
+
         while SeedQ:
             if args.arg1 == "coap" or args.arg1 == "http":
                 inputs, path, method, context = await seed_and_mutate_openapi(
@@ -206,24 +280,25 @@ async def main():
                     and context == None
                 ):
                     continue
-                # elif no_coverage == False:
-
+                elif no_coverage == False:
+                    try:
+                        server_process = await client.call_process(context)
+                    except Exception as e:
+                        print(e + " " + "Not able to run server, please set --no-coverage")
+                        raise e
+                    await asyncio.sleep(2)
                 # pid = server_process.pid
-                response_payload, status_code, coverage_data = await client.send_payload(
+                response_payload, status_code = await client.send_payload(
                         inputs, path, method
                     )
-                print(coverage_data)
-                request_key = f"{path}_{method}_{int(time.time())}"
-                coverage_data_store[request_key] = coverage_data
-
-                # # Check if the process has terminated
-                # if no_coverage == False:
-                #     if server_process.poll() is not None:
-                #         pass
-                #         print("Server crashed!")
-                #     else:
-                #         server_process.send_signal(signal.SIGINT)
-                #         await asyncio.sleep(1)
+                # Check if the process has terminated
+                if no_coverage == False:
+                    if server_process.poll() is not None:
+                        pass
+                        print("Server crashed!")
+                    else:
+                        server_process.send_signal(signal.SIGINT)
+                        await asyncio.sleep(1)
 
             elif args.arg1 == "ble":
                 inputs, path, method, context = await seed_and_mutate_ble(
@@ -241,9 +316,21 @@ async def main():
                 response_payload, status_code = await driver
                 zephyr.terminate()
                 
+            previous_coverage_data = get_coverage_data()
+
+            response_payload, status_code = await client.send_payload(inputs, path, method)
+            # Immediately after the response is obtained, the current coverage data is obtained
+            current_coverage_data = get_coverage_data()
+
+            # now determine if there is new coverage
+            new_coverage = has_new_coverage(previous_coverage_data, current_coverage_data)
+                
+                
+
+ 
 
             # TODO isInteresting
-            if is_interesting(response_payload, status_code):
+            if is_interesting(response_payload, status_code, previous_coverage_data, current_coverage_data):
                 print("Interesting finding! Adding to the FailureQ.")
                 if status_code not in FailureQ[path][method]:
                     FailureQ[path][method][status_code] = []

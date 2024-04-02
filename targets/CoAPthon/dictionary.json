@@ -1,0 +1,118 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+      "title": "Swagger Petstore - OpenAPI 3.0",
+      "termsOfService": "http://swagger.io/terms/",
+      "version": "1.0.11"
+    },
+    "externalDocs": {
+      "description": "Find out more about Swagger",
+      "url": "http://swagger.io"
+    },
+    "servers": [
+      {
+        "url": "coap://localhost:5683"
+      }
+    ],
+    "tags": [
+      {
+        "name": "Basic",
+        "description": "Everything about your Pets",
+        "externalDocs": {
+          "description": "Find out more",
+          "url": "http://swagger.io"
+        }
+      },
+      {
+        "name": "Storage",
+        "description": "Access to Petstore orders",
+        "externalDocs": {
+          "description": "Find out more about our store",
+          "url": "http://swagger.io"
+        }
+      },
+      {
+        "name": "Child",
+        "description": "Operations about user"
+      }
+    ],
+    "paths": {
+      "/basic": {
+        "put": {
+          "tags": [
+            "Basic"
+          ],
+          "input": "Hello World"
+          
+        },
+        "get": {
+          "tags": [
+            "Basic"
+          ],
+          "input": "Hello World"
+        },
+        "post": {
+          "tags": [
+            "Basic"
+          ],
+          "input": "Hello World"
+        },
+        "delete": {
+          "tags": [
+            "Basic"
+          ],
+          "input": "Hello World"
+        }
+      },
+      "/storage": {
+        "get": {
+          "tags": [
+            "Storage"
+          ],
+          "input": "Hello World"
+        },
+        "post": {
+          "tags": [
+            "Storage"
+          ],
+          "input": "Hello World"
+        }
+      },
+      "/child": {
+        "put": {
+          "tags": [
+            "Child"
+          ],
+          "input": "Hello World"
+        },
+        "get": {
+          "tags": [
+            "Child"
+          ],
+          "input": "Hello World"
+        },
+        "post": {
+          "tags": [
+            "Child"
+          ],
+          "parameters": [
+            {
+              "name": "query",
+              "in": "query",
+              "description": "Optional query parameter",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "input": "Hello World"
+        },
+        "delete": {
+          "tags": [
+            "Child"
+          ],
+          "input": "Hello World"
+        }
+      }
+    }
+  }

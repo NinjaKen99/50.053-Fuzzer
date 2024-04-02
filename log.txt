@@ -1,1 +1,6 @@
-/storage:
+/datatb/product/add/:
+code:post, status code: None, no = 2
+/accounts/{username}:
+code:put, status code: None, no = 6
+/accounts/register/:
+code:post, status code: None, no = 2

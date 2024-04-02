@@ -41,10 +41,10 @@ class mutation:
     def int_to_bytes(input: int):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
         byte_set = []
-        byte_count = 4
-        b32 = bin(input)[2:].zfill(32)
+        b32 = bin(input)[2:].zfill(64)
         for i in range(byte_count):
             byte_set.append(b32[i*8 : 8 + i*8])
+        byte_count = len(byte_set)
         return byte_set, byte_count
     
     # Convert array of bytes into integer
@@ -155,7 +155,7 @@ class mutation:
     
     # Change a single byte in test case
     @staticmethod
-    def random_byte (input = "testing"):
+    def random_byte_str (input = "testing"):
         b, number, datatype = mutation.convert_bytes(input)
         # Create a byte for replacement
         replacement = ""
@@ -169,6 +169,28 @@ class mutation:
         rbyte = randint(0, number-1)
         b[rbyte] = replacement
         return mutation.convert_back(b, datatype)
+    
+    @staticmethod
+    def random_byte_int (input = 123467):
+        b, number, datatype = mutation.convert_bytes(input)
+        # Create a byte for replacement
+        replacement = ""
+        for i in range(bits_in_byte):
+            bit = randint(0,1)
+            if (bit == 1):
+                replacement += '1'
+            elif (bit == 0):
+                replacement += '0'
+        # Choose which byte to replace
+        rng = randint(0,1)
+        half = int(number/2)
+        if (rng == 1):
+            rbyte = randint(0, 3)
+        else:
+            rbyte = randint(4, 7)
+        b[rbyte] = replacement
+        return mutation.convert_back(b, datatype)
+    
     
     # Completely remove a certain number of consecutive bytes
     @staticmethod
@@ -189,10 +211,30 @@ class mutation:
             b.pop(start_point)
         return mutation.convert_back(b, datatype)
     
-    # Change several bytes in a text case
-    #def overwrite_bytes (input = ""):
-        # Similar to random
-    #    return input
+    @staticmethod
+    def random_mutation(input = "testing"):
+        mutation_count = 5
+        chosen_mutation = randint(1,mutation_count)
+        match chosen_mutation:
+            case 1:
+                return mutation.bitflip(input)
+            case 2:
+                return mutation.byteflip(input)
+            case 3:
+                sample = "something"
+                return mutation.insert_bytes(input, sample)
+            case 4:
+                if isinstance(input, str):
+                    return mutation.random_byte_str(input)
+                elif isinstance(input, int):
+                    return mutation.random_byte_int(input)
+            case 5:
+                return mutation.delete_bytes(input)
+            case _:
+                # Error
+                print("Error in random_mutation has occured.\n")
+                pass
+        return input
     
     ########## ASCII OPERATIONS ##########
     @staticmethod

@@ -329,20 +329,20 @@
         "properties": {
           "name": {
             "type": "string",
-            "example": "theProduct",
+            "example": "th",
             "minLength": 1,
             "maxLength": 10
 
           },
           "info": {
             "type": "string",
-            "example": "product information",
+            "example": "\\\\{}vg",
             "minLength": 1,
             "maxLength": 4
           },
           "price": {
             "type": "integer",
-            "example": 12345,
+            "example": 4294967295,
             "format": "int64"
           }
         }
@@ -387,8 +387,8 @@
               "tableExample": {
                 "summary": "Table seed example",
                 "value": {
-                  "name": ["product1", "product2", "product3"],
-                  "info": ["info", "ggwp", "hh", "help"],
+                  "name": ["uc", "t2", "p3"],
+                  "info": ["\\\\{}vgukluelflke;aeak;wf;awf;kamw;kfmwf;amv;leme;ofma;fnwgboigiuvukvuv;iui;;"],
                   "price": ["12", "23", "45"]
                 }
               }

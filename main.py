@@ -303,16 +303,18 @@ async def main():
         raise e
     try:
         while SeedQ:
-            print(SeedQ)
             # AssignEnergy
             if args.arg1 == "coap" or args.arg1 == "http":
                 path, method = await choose_next_method(SeedQ, FailureQ)
                 if path == None and method == None:
                     continue
                 # Choose input
-                original_input = random.choice(SeedQ[path][method])
+                if len(SeedQ[path][method]) == 0:
+                    original_input = {}
+                else:
+                    original_input = random.choice(SeedQ[path][method])
             elif args.arg1 == "ble":
-                #TODO choose next service/charactistics to fuzz
+                # TODO choose next service/charactistics to fuzz
                 original_input = await seed_and_mutate_ble(SeedQ, FailureQ)
 
             energy = assign_energy.AssignEnergy(original_input)
@@ -324,7 +326,10 @@ async def main():
                     mutated_input = {}
                     for x in mutated_input_seed:
                         mutated_input[x] = mutated_input_seed[x]["value"]
-
+                    # print(mutated_input)
+                    # print(path)
+                    # print(method)
+                    print("Sending payload...")
                     response_payload, status_code = await client.send_payload(
                         mutated_input, path, method
                     )
@@ -338,9 +343,10 @@ async def main():
                             FailureQ[path][method][status_code].append(
                                 (mutated_input_seed, response_payload)
                             )
-                            server_process = await client.call_process("django")
-                    
-                    #IsInteresting
+                            server_process = await client.call_process("main_program")
+
+                    # IsInteresting
+                    await asyncio.sleep(1)
                     current_coverage_data = await get_coverage_data()
                     if await is_interesting(
                         total_coverage_data,
@@ -348,9 +354,7 @@ async def main():
                     ):
                         # Add to SeedQ
                         await add_to_SeedQ(SeedQ, path, method, mutated_input_seed)
-                        
-                        
-                
+
                 elif args.arg1 == "ble":
                     inputs, path, method, context = await seed_and_mutate_ble(
                         SeedQ, FailureQ
@@ -367,20 +371,19 @@ async def main():
                     zephyr = await client.call_process()
                     response_payload, status_code = await driver
                     zephyr.terminate()
-                    #TODO add in isinteresting for SeedQ and FailureQ
-                    
+                    # TODO add in isinteresting for SeedQ and FailureQ
 
     except KeyboardInterrupt as e:
         print(e)
 
     except Exception as e:
         print(f"{traceback.format_exc()}")
-        
+
     finally:
         try:
             print("\nShutting Down Server! please wait...")
             server_process.send_signal(signal.SIGINT)
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
             pass
         except:
             pass
@@ -393,10 +396,10 @@ async def main():
                     log += (
                         f"code:{y}, status code: {z}, no = {len(FailureQ[x][y][z])}\n"
                     )
-        with open("log.json", "w") as json_file:
+        with open("SeedQ.json", "w") as json_file:
             json.dump(SeedQ, json_file)
-        with open("log.txt", "w") as file:
-            file.write(log)
+        with open("FailureQ.json", "w") as json_file:
+            json.dump(FailureQ, json_file)
         return
     """
         Step 1: Compile Openapi json to a readable format

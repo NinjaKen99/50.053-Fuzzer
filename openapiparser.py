@@ -1,7 +1,15 @@
+from openapi_parser.specification import (
+    Path,
+    Object,
+    Schema,
+    Property,
+    Integer,
+    String,
+    Specification,
+)
 
-from openapi_parser.specification import Path, Object, Schema, Property, Integer, String, Specification
 
-def parse_openapi(grammar:Specification):
+def parse_openapi(grammar: Specification):
     SeedQ = dict()
     for path in grammar.paths:
         methods = path.operations
@@ -24,7 +32,7 @@ def parse_openapi(grammar:Specification):
                         formatting["min_length"] = schema.min_length
                     else:
                         formatting["min_length"] = 1
-                    
+
                     if SeedQ[path.url].get(method) == None:
                         SeedQ[path.url][method] = []
                     SeedQ[path.url][method].append({"string": formatting})
@@ -36,6 +44,8 @@ def parse_openapi(grammar:Specification):
                     current_object = dict()
                     for i in object.properties:
                         formatting = dict()
+                        if i.schema.read_only == True:
+                            continue
                         if i.schema.type.value == "integer":
                             schema: Integer = i.schema
                             formatting = {
@@ -58,4 +68,6 @@ def parse_openapi(grammar:Specification):
                                 formatting["min_length"] = 1
                         current_object[i.name] = formatting
                     SeedQ[path.url][method].append(current_object)
+            else:
+                SeedQ[path.url][method] =  []
     return SeedQ

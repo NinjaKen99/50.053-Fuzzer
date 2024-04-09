@@ -1,3 +1,4 @@
+import asyncio
 import os
 import re
 import subprocess
@@ -11,7 +12,7 @@ class DjangoClient:
         self.url = url
         self.client = httpx.AsyncClient(timeout=30)
 
-    async def call_process(self, context):        
+    async def call_process(self, context):
         return subprocess.Popen(
             [
                 "coverage",
@@ -25,7 +26,16 @@ class DjangoClient:
             ],
             cwd="./targets/DjangoWebApplication",
             preexec_fn=os.setpgrp,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, errors="ignore"
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            errors="ignore",
+        )
+
+    async def login(self, username, password):
+        return await self.client.post(
+            f"{self.url}/login/jwt/",
+            json={"username": username, "password": password},
+            follow_redirects=True,
         )
 
     async def send_payload(self, input, uri, code):
@@ -43,11 +53,13 @@ class DjangoClient:
                     print(x[1:-1])
                     print(input[x[1:-1]])
                     registration_url = registration_url.replace(x, input[x[1:-1]])
+        print(registration_url)
         try:
             match code:
                 case "get":
                     response = await self.client.get(
-                        registration_url, follow_redirects=True
+                        registration_url,
+                        follow_redirects=True,
                     )
                 case "post":
                     # Send a POST request to the registration endpoint with the user data
@@ -80,3 +92,7 @@ class DjangoClient:
 
         except Exception as e:
             return None, None
+
+
+# djg = DjangoClient("http://localhost:8000/")
+# print(asyncio.run(djg.login("example", "example")).json())

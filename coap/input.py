@@ -27,7 +27,6 @@ class COAPClient:
             ],
             cwd="./targets/CoAPthon",
             preexec_fn=os.setpgrp,
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
 
     async def str_to_code(self, code: str):
@@ -46,7 +45,7 @@ class COAPClient:
             case _:
                 raise ValueError(f"Unknown code: {code}")
 
-    async def send_payload(self, payload, uri, code):
+    async def send_payload(self, payload, uri, code, schema):
         protocol = await Context.create_client_context()
         code = await self.str_to_code(code)
         payload = payload["string"]

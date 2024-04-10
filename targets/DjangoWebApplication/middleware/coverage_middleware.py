@@ -14,8 +14,10 @@ class CoverageMiddleware:
 
     def __call__(self, request: WSGIRequest):
         if request.method == "POST" or request.method == "PUT":
-            data = json.loads(request.body)
-            print(data)
+            try:
+                data = json.loads(request.body)
+            except:
+                data = request.POST
             string = ""
             for x in data:
                 string += str(x) + ":" + str(data[x]) + ","

@@ -22,6 +22,9 @@ from bumble.colors import color
 import subprocess
 from bumble.gatt_client import ServiceProxy, CharacteristicProxy, DescriptorProxy, UUID
 
+from bumble.gatt import Characteristic
+
+writable = [Characteristic.WRITE, Characteristic.WRITE_WITHOUT_RESPONSE, Characteristic.WRITE_WITHOUT_RESPONSE, Characteristic.AUTHENTICATED_SIGNED_WRITES, Characteristic.WRITE_REQUIRES_AUTHENTICATION, Characteristic.WRITE_REQUIRES_AUTHORIZATION]
 
 async def write_target(target, attribute, bytes):
     # Write
@@ -100,39 +103,38 @@ class TargetServicesListener(Device.Listener):
         target = Peer(connection)
         attributes = dict()
         await target.discover_services()
-        attributes["services"] = dict()
         for service in target.services:
             await service.discover_characteristics()
-            attributes["services"][service.uuid.name] = {"object": service}
             try:
                 value = await service.read_value()
-                attributes["services"][service]["value"] = value
+                attributes[service]["value"] = value
             except:
-                pass
-            attributes["services"][service.uuid.name]["characteristics"] = dict()
+                value = b'1'
+            attributes[f"{service.handle:04X}"] = {"name": service.uuid.name, "type": service.type.name, "uuid": service.uuid.to_hex_str(), "host": "service", "object": service, "value": [value]}
+
             for characteristic in service.characteristics:
-                attributes["services"][service.uuid.name]["characteristics"][characteristic.uuid.name] = {
-                    "descriptors": {},
-                    "object": characteristic,
-                    "permissions": characteristic.properties
-                }
                 try:
                     value = await characteristic.read_value()
-                    attributes["services"][service.uuid.name]["characteristics"][characteristic.uuid.name][
-                        "value"
-                    ] = value
                 except:
-                    pass
+                    value = b'1'
+                attributes[f"{characteristic.handle:04X}"] = {
+                    "name": characteristic.uuid.name,
+                    "permissions": characteristic.properties,
+                    "type": characteristic.type.name,
+                    "uuid": characteristic.uuid,
+                    "host": "characteristic",
+                    "object": characteristic,
+                    "value": [value]
+                }
                 await characteristic.discover_descriptors()
                 for descriptor in characteristic.descriptors:
                     try:
                         value = await descriptor.read_value()
                     except:
-                        value = None
-                        pass
-                    attributes["services"][service.uuid.name]["characteristics"][characteristic.uuid.name][
-                        "descriptors"
-                    ][descriptor.type] = {"object": descriptor, "value": value}
+                        value = b'1'
+                        
+                    attributes[f"{descriptor.handle:04X}"] = {"name": descriptor.type.name, "type": descriptor.type.name, "value": [value],  "host": "descriptor", "object": descriptor}
+                
                     
         print(color("[OK] Services discovered", "green"))
         self.services = attributes
@@ -321,15 +323,17 @@ class BLEClient:
         services = await self.connection_basic("service")
         process.terminate()
         await asyncio.sleep(3)
+                    
         return services
 
     async def send_payload(self, payload, service, characteristic):
-        return await self.connection_basic("send", characteristic, payload)
+        byte_payload = payload["byte"]
+        return await self.connection_basic("send", characteristic, byte_payload)
 
 
-# -----------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 #logging.basicConfig(level=os.environ.get("BUMBLE_LOGLEVEL", "INFO").upper())
-#services = asyncio.run(BLEClient(9000).get_services())
+# services = asyncio.run(BLEClient(9000).get_services())
 # x: ServiceProxy
 # for x in services["services"]:
 #     print("Service")
@@ -359,7 +363,6 @@ class BLEClient:
 #             print("         " + str(z[0].type))
 #             print("         " + str(z[1]))
             
-#json.dump(services, open("services.json", "w"))
 
 # for x in example:
 #     print(x)

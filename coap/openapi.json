@@ -17,25 +17,54 @@
   "tags": [
     {
       "name": "Basic",
-      "description": "Everything about your Pets",
-      "externalDocs": {
-        "description": "Find out more",
-        "url": "http://swagger.io"
-      }
+      "description": "Basic operations including GET, PUT, POST, and DELETE methods on basic text resources."
     },
     {
       "name": "Storage",
-      "description": "Access to Petstore orders",
-      "externalDocs": {
-        "description": "Find out more about our store",
-        "url": "http://swagger.io"
-      }
+      "description": "Operations related to storage management, focusing on POST method to create new storage instances."
     },
     {
       "name": "Child",
-      "description": "Operations about user"
+      "description": "Child resource management, supporting dynamic interactions through GET, PUT, POST, and DELETE methods."
+    },
+    {
+      "name": "Separate",
+      "description": "Demonstrates separate response handling with delayed responses for GET, POST, PUT, and DELETE methods."
+    },
+    {
+      "name": "Long",
+      "description": "Resource designed for testing long processing times, specifically with GET requests."
+    },
+    {
+      "name": "Big",
+      "description": "Handles large data payloads, particularly for testing performance with extensive data transfers."
+    },
+    {
+      "name": "Void",
+      "description": "A minimalistic resource that demonstrates a void or placeholder functionality with no specific actions."
+    },
+    {
+      "name": "XML",
+      "description": "Provides responses in XML format, suitable for testing XML handling and content negotiation."
+    },
+    {
+      "name": "MultipleEncoding",
+      "description": "Supports multiple content types including XML, JSON, and plain text, demonstrating content negotiation."
+    },
+    {
+      "name": "ETAG",
+      "description": "Utilizes ETags to manage caching and version control of resource states through GET, POST, and PUT methods."
+    },
+    {
+      "name": "Advanced",
+      "description": "Advanced resource operations with custom response handling and manipulation for GET, POST, PUT, and DELETE methods."
+    },
+    {
+      "name": "AdvancedSeparate",
+      "description": "Extension of AdvancedResource with separate handling for asynchronous operations in GET, POST, PUT, and DELETE methods."
     }
-  ],
+  ]
+  ,
   "paths": {
     "/basic": {
       "put": {
@@ -281,6 +310,535 @@
                 "schema": {
                   "type": "string",
                   "example": "Hello, world!"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/separate": {
+      "get": {
+        "tags": ["Separate"],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Separate"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Separate"],
+        "requestBody": {
+          "description": "Update payload",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "New payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "New payload"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Separate"],
+        "requestBody": {
+          "description": "Update payload",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "Updated payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Updated payload"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Separate"],
+        "responses": {
+          "200": {
+            "description": "Resource deleted successfully"
+          }
+        }
+      }
+    },
+    "/long": {
+      "get": {
+        "tags": ["Long"],
+        "responses": {
+          "200": {
+            "description": "Successful operation with delayed response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Long Time"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/big": {
+      "get": {
+        "tags": ["Big"],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras sollicitudin fermentum ornare. Cras accumsan tellus quis dui lacinia eleifend. Proin ultrices rutrum orci vitae luctus. Nullam malesuada pretium elit, at aliquam odio vehicula in. Etiam nec maximus elit. Etiam at erat ac ex ornare feugiat. Curabitur sed malesuada orci, id aliquet nunc. Phasellus nec leo luctus, blandit lorem sit amet, interdum metus. Duis efficitur volutpat magna, ac ultricies nibh aliquet sit amet. Etiam tempor egestas augue in hendrerit. Nunc eget augue ultricies, dignissim lacus et, vulputate dolor. Nulla eros odio, fringilla vel massa ut, facilisis cursus quam. Fusce faucibus lobortis congue. Fusce consectetur porta neque, id sollicitudin velit maximus eu. Sed pharetra leo quam, vel finibus turpis cursus ac. Aenean ac nisi massa. Cras commodo arcu nec ante tristique ullamcorper. Quisque eu hendrerit urna. Cras fringilla eros ut nunc maximus, non porta nisl mollis. Aliquam in rutrum massa. Praesent tristique turpis dui, at ultricies lorem fermentum at. Vivamus sit amet ornare neque, a imperdiet nisl. Quisque a iaculis libero, id tempus lacus. Aenean convallis est non justo consectetur, a hendrerit enim consequat. In accumsan ante a egestas luctus. Etiam quis neque nec eros vestibulum faucibus. Nunc viverra ipsum lectus, vel scelerisque dui dictum a. Ut orci enim, ultrices a ultrices nec, pharetra in quam. Donec accumsan sit amet eros eget fermentum. Vivamus ut odio ac odio malesuada accumsan. Aenean vehicula diam at tempus ornare. Phasellus dictum mauris a mi consequat, vitae mattis nulla fringilla. Ut laoreet tellus in nisl efficitur, a luctus justo tempus. Fusce finibus libero eget velit finibus iaculis. Morbi rhoncus purus vel vestibulum ullamcorper. Sed ac metus in urna fermentum feugiat. Nulla nunc diam, sodales aliquam mi id, varius porta nisl. Praesent vel nibh ac turpis rutrum laoreet at non odio. Phasellus ut posuere mi. Suspendisse malesuada velit nec mauris convallis porta. Vivamus sed ultrices sapien, at cras amet."
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Big"],
+        "requestBody": {
+          "description": "Update payload",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "New payload content"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payload updated successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "New payload content"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/void": {
+      "get": {
+        "tags": ["Void"],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "This is a void resource with no specific actions."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/xml": {
+      "get": {
+        "tags": ["XML"],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "example": "<value>0</value>"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/multiple-encoding": {
+      "get": {
+        "tags": ["MultipleEncoding"],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "example": "<value>0</value>"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "{'value': '0'}"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["MultipleEncoding"],
+        "requestBody": {
+          "description": "Update the value",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "New value"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Value updated successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Value updated"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["MultipleEncoding"],
+        "requestBody": {
+          "description": "Create a new resource instance",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "Create new instance"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New resource instance created",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "New instance created"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/etag": {
+      "get": {
+        "tags": ["ETAG"],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "ETag resource"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Entity Tag for the resource",
+                "schema": {
+                  "type": "string",
+                  "example": "0"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["ETAG"],
+        "requestBody": {
+          "description": "Update the resource payload and increment ETag",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "New payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payload updated and ETag incremented",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "New payload"
+                }
+              }
+            },
+            "headers": {
+              "ETag": {
+                "description": "Updated Entity Tag for the resource",
+                "schema": {
+                  "type": "string",
+                  "example": "1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["ETAG"],
+        "requestBody": {
+          "description": "Update the resource payload",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "Updated payload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payload updated successfully",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Updated payload"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/advanced": {
+      "get": {
+        "tags": ["Advanced"],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Advanced resource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Advanced"],
+        "requestBody": {
+          "description": "Update the resource payload",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "New payload for POST"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Resource created",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Response changed through POST"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Advanced"],
+        "requestBody": {
+          "description": "Update the resource payload",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "New payload for PUT"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resource updated",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Response changed through PUT"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Advanced"],
+        "responses": {
+          "200": {
+            "description": "Resource deleted",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Response deleted"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/advanced-separate": {
+      "get": {
+        "tags": ["AdvancedSeparate"],
+        "responses": {
+          "200": {
+            "description": "Successful operation with delayed response",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Advanced resource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["AdvancedSeparate"],
+        "requestBody": {
+          "description": "Update the resource payload",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "New payload for POST"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response changed through POST",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Response changed through POST"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["AdvancedSeparate"],
+        "requestBody": {
+          "description": "Update the resource payload",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "example": "New payload for PUT"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response changed through PUT",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Response changed through PUT"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["AdvancedSeparate"],
+        "responses": {
+          "200": {
+            "description": "Resource deleted",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Response deleted"
                 }
               }
             }

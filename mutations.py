@@ -4,6 +4,10 @@ from random import randint
 # Re-used variables
 choices = [1, 2, 4]
 bits_in_byte = 8
+ascii_max = 256
+ascii_uppercase_range = [65, 90]
+ascii_lowercase_range = [97, 122]
+ascii_number_range = [48, 57]
 
 
 class mutation:
@@ -22,15 +26,25 @@ class mutation:
     def bytes_to_str(input: list):
         return ''.join([chr(int(x, 2)) for x in input])
     
+    # Convert byte object into str
+    @staticmethod
+    def b_to_str(input):
+        return input.decode('utf-8', "strict")
+    
+    # Convert str to b
+    @staticmethod
+    def str_to_b(input):
+        return input.encode('utf-8', "strict")
+    
     # Covert input int into array of bytes
     @staticmethod
     def int_to_bytes(input: int):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
         byte_set = []
-        byte_count = 4
-        b32 = bin(input)[2:].zfill(32)
+        b32 = bin(input)[2:].zfill(64)
         for i in range(byte_count):
             byte_set.append(b32[i*8 : 8 + i*8])
+        byte_count = len(byte_set)
         return byte_set, byte_count
     
     # Convert array of bytes into integer
@@ -38,13 +52,31 @@ class mutation:
     def bytes_to_int(input: list):
         return int(''.join(x for x in input) , 2)
     
+    # Convert b to int
+    @staticmethod
+    def b_to_int(input):
+        return int.from_bytes(input, 'big')
+    
+    # Convert int to b
+    @staticmethod
+    def int_to_b(input):
+        return input.to_bytes(2,'big')
+    
+    
     @staticmethod
     def convert_bytes(input):
         datatype = type(input)
-        if isinstance(input, str):
-            output1, output2 = mutation.str_to_bytes(input)
-        elif isinstance(input, int):
-            output1, output2 = mutation.int_to_bytes(input)
+        if (datatype == bytes):
+            try:
+                intermediate = mutation.b_to_str(input)
+            except:
+                intermediate = mutation.b_to_int(input)
+        else:
+            intermediate = input
+        if isinstance(intermediate, str):
+            output1, output2 = mutation.str_to_bytes(intermediate)
+        elif isinstance(intermediate, int):
+            output1, output2 = mutation.int_to_bytes(intermediate)
         return output1, output2, datatype
     
     @staticmethod
@@ -55,7 +87,15 @@ class mutation:
             output = mutation.bytes_to_int(input)
         return output
     
-    ### HERE IS WHERE ALL FUNCTIONS TO PERFORM A MUTATION SHALL BE MADE
+    @staticmethod
+    def convert_to_b(input):
+        if isinstance(input, str):
+            output = mutation.str_to_b(input)
+        elif isinstance(input, int):
+            output = mutation.int_to_b(input)
+        return output
+    
+    ### FUNCTIONS THAT PERFORM MUTATIONS ON BINARY BYTES
     # Flip a set number of consecutive bits within a byte
     @staticmethod
     def bitflip (input = "testing"):
@@ -109,13 +149,13 @@ class mutation:
             b3.append(b1[i])
         b3.append(b2[extract])
         for i in range(insertion, number1):
-            b3.append[b1[i]]
+            b3.append(b1[i])
         output = ''.join([chr(int(x, 2)) for x in b3])
         return output
     
     # Change a single byte in test case
     @staticmethod
-    def random_byte (input = "testing"):
+    def random_byte_str (input = "testing"):
         b, number, datatype = mutation.convert_bytes(input)
         # Create a byte for replacement
         replacement = ""
@@ -129,6 +169,28 @@ class mutation:
         rbyte = randint(0, number-1)
         b[rbyte] = replacement
         return mutation.convert_back(b, datatype)
+    
+    @staticmethod
+    def random_byte_int (input = 123467):
+        b, number, datatype = mutation.convert_bytes(input)
+        # Create a byte for replacement
+        replacement = ""
+        for i in range(bits_in_byte):
+            bit = randint(0,1)
+            if (bit == 1):
+                replacement += '1'
+            elif (bit == 0):
+                replacement += '0'
+        # Choose which byte to replace
+        rng = randint(0,1)
+        half = int(number/2)
+        if (rng == 1):
+            rbyte = randint(0, 3)
+        else:
+            rbyte = randint(4, 7)
+        b[rbyte] = replacement
+        return mutation.convert_back(b, datatype)
+    
     
     # Completely remove a certain number of consecutive bytes
     @staticmethod
@@ -149,15 +211,72 @@ class mutation:
             b.pop(start_point)
         return mutation.convert_back(b, datatype)
     
-    # Change several bytes in a text case
-    #def overwrite_bytes (input = ""):
-        # Similar to random
-    #    return input
+    @staticmethod
+    def random_mutation(input = "testing"):
+        mutation_count = 5
+        chosen_mutation = randint(1,mutation_count)
+        match chosen_mutation:
+            case 1:
+                return mutation.bitflip(input)
+            case 2:
+                return mutation.byteflip(input)
+            case 3:
+                sample = "something"
+                return mutation.insert_bytes(input, sample)
+            case 4:
+                if isinstance(input, str):
+                    return mutation.random_byte_str(input)
+                elif isinstance(input, int):
+                    return mutation.random_byte_int(input)
+            case 5:
+                return mutation.delete_bytes(input)
+            case _:
+                # Error
+                print("Error in random_mutation has occured.\n")
+                pass
+        return input
+    
+    ########## ASCII OPERATIONS ##########
+    @staticmethod
+    def str_to_ascii(input):
+        output = []
+        count = 0
+        for character in input:
+            output.append(ord(character))
+            count += 1
+        return output, count
+    
+    @staticmethod
+    def int_to_ascii(input):
+        string = str(input)
+        output, count = mutation.str_to_ascii(input)
+        return output, count
+    
+    @staticmethod
+    def ascii_to_str(input):
+        return ''.join(map(chr,input))
+    
+    @staticmethod
+    def ascii_to_int(input):
+        numstr = mutation.ascii_to_str(input)
+        return int(numstr)
+
 
 
 #testing = int
-print('test')
+#print('test')
 #print(testing)
 #test_set, test_number = mutation.int_to_bytes(2143765)
 #print(mutation.bytes_to_int(test_set))
-print(mutation.delete_bytes(123))
+#print(mutation.delete_bytes(123))
+
+message = "testing"
+byte_message = bytes(message, 'utf-8')
+number = 383
+number = 127
+bytes_number = number.to_bytes(2, 'big')
+print(type(bytes_number))
+try:
+    print(mutation.b_to_str(bytes_number))
+except:
+    print(mutation.b_to_int(bytes_number))

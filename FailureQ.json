@@ -1,1 +1,1 @@
-{"/accounts/register/": {"post": {}}}
+{"/datatb/product/add/": {"post": {}}, "/api/product/{id}/": {"get": {}, "put": {}, "post": {}, "delete": {}}}

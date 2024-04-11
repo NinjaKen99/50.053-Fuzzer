@@ -1,7 +1,9 @@
+from datetime import datetime
 from os import path
 import os
+import subprocess
 import coverage
-
+from lcovparser import parse_file, Record
 async def get_latest_file(directory):
     """
     Returns the latest modified file in the specified directory.
@@ -57,6 +59,16 @@ async def get_coverage_data(type):
             lines = cov_data.lines(filename)
             coverage_dict[filename] = lines
         
+    else:
+        subprocess.run(['lcov', '--capture', '--directory', './targets/Zephyr/', '--output-file', 'lcov.info', '-q'], 
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+        coverage_dict = dict()
+        report = parse_file("./lcov.info", ignore_incorrect_counts=True, merge_duplicate_line_hit_counts=True)
+        file:Record
+        for file in report:
+            coverage_dict[file] = sorted(report[file].lines_executed)
+
     return coverage_dict
 
 
@@ -74,7 +86,7 @@ async def has_new_coverage(total_coverage_data: dict, current_coverage_data: dic
     return is_interesting
 
 
-async def is_interesting(total_coverage_data, current_coverage_data):
+async def is_interesting(total_coverage_data, current_coverage_data, interesting_time):
     """
     Check if the response indicates a potential error, contains sensitive information,
     or if new coverage was detected.
@@ -105,6 +117,7 @@ async def is_interesting(total_coverage_data, current_coverage_data):
     new_coverage = await has_new_coverage(total_coverage_data, current_coverage_data)
     if new_coverage:
         print("New code coverage detected, which is interesting.")
+        interesting_time[len(interesting_time.keys())] = datetime.now().isoformat()
         return True
     # No indicators of interest found
     return False

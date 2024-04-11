@@ -107,35 +107,37 @@ class TargetServicesListener(Device.Listener):
             await service.discover_characteristics()
             try:
                 value = await service.read_value()
-                attributes[service]["value"] = value
             except:
-                value = b'1'
-            attributes[f"{service.handle:04X}"] = {"name": service.uuid.name, "type": service.type.name, "uuid": service.uuid.to_hex_str(), "host": "service", "object": service, "value": [value]}
+                value = b'\x00\x00'
+            attributes[f"{service.handle:04X}"] = {"name": str(service), 
+                                                    #"type": service.type.name, 
+                                                    #"uuid": service.uuid.to_hex_str(), 
+                                                    "host": "service", "object": service, "seeds": [value]}
 
             for characteristic in service.characteristics:
                 try:
                     value = await characteristic.read_value()
                 except:
-                    value = b'1'
+                    value = b'\x00\x00'
                 attributes[f"{characteristic.handle:04X}"] = {
-                    "name": characteristic.uuid.name,
-                    "permissions": characteristic.properties,
-                    "type": characteristic.type.name,
-                    "uuid": characteristic.uuid,
+                    "name": str(characteristic),
+                    # "permissions": characteristic.properties,
+                    #"type": characteristic.type.name,
+                    # "uuid": characteristic.uuid,
                     "host": "characteristic",
                     "object": characteristic,
-                    "value": [value]
+                    "seeds": [value]
                 }
                 await characteristic.discover_descriptors()
                 for descriptor in characteristic.descriptors:
                     try:
                         value = await descriptor.read_value()
                     except:
-                        value = b'1'
+                        value = b'\x00\x00'
                         
-                    attributes[f"{descriptor.handle:04X}"] = {"name": descriptor.type.name, "type": descriptor.type.name, "value": [value],  "host": "descriptor", "object": descriptor}
-                
-                    
+                    attributes[f"{descriptor.handle:04X}"] = {"name": str(descriptor), 
+                                                              "seeds": [value],  "host": "descriptor", "object": descriptor}
+
         print(color("[OK] Services discovered", "green"))
         self.services = attributes
         self.transcation_done = True
@@ -179,7 +181,6 @@ class TargetSendListener(Device.Listener):
         # Discover all attributes (services, characteristitcs, descriptors, etc)
         print("=== Discovering services")
         target = Peer(connection)
-
         self.status = await write_target(target, self.attribute, self.payload)
         self.result = await read_target(target, self.attribute)
         self.transcation_done = True
@@ -256,6 +257,7 @@ class BLEClient:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             cwd="targets/Zephyr",
+            env={"GCOV_PREFIX":"./", "GCOV_PREFIX_STRIP":"3"}
         )
         return process
 

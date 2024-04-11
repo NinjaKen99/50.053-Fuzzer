@@ -98,7 +98,7 @@ def parse_new_openapi(grammar: Specification):
     schema_keys = list()
     # compile schemas into a dict
     for path in paths:
-        SeedQ[path.url.lower()] = {"schema": "", "methods": [], "seeds": []}
+        SeedQ[path.url.lower()] = deepcopy({"schema": "", "methods": [], "seeds": []})
         for operation in path.operations:
             SeedQ[path.url.lower()]["methods"].append(operation.method.value)
             if operation.request_body != None:
@@ -112,10 +112,11 @@ def parse_new_openapi(grammar: Specification):
                             combination_lists.append(i.schema.example)
                             schema_keys.append(i.name)
                         combination = itertools.product(*combination_lists)
-                        cur_object = dict()
                         for i in combination:
+                            cur_object = dict()
                             for j in range(len(i)):
                                 cur_object[schema_keys[j]] = i[j]
+
                             SeedQ[path.url.lower()]["seeds"].append(cur_object)
                     
                     elif cur_schema.type.value == "string":

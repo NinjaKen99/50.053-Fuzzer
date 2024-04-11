@@ -136,6 +136,8 @@ async def initalize():
         except:
             pass
     FailureQ = {}
+    interesting_time = {0:datetime.now().isoformat()}
+    failure_time = {0:datetime.now().isoformat()}
     match args.arg1:
 
         case "coap":
@@ -162,19 +164,20 @@ async def initalize():
         
         with open("FailureQ.json") as g:
             FailureQ = json.load(g)
-        
+
+        with open("interesting.json") as f:
+            interesting_time = json.load(f)
+        with open("failure.json") as f:
+            failure_time = json.load(f)
     no_coverage = args.nocoverage
     # load all examples/inputs into SeedQ
     # select random path and method in grammar
     total_coverage_data = await get_coverage_data(args.arg1)
-    return SeedQ, FailureQ, client, no_coverage, total_coverage_data, args
+    return SeedQ, FailureQ, client, no_coverage, total_coverage_data, interesting_time, failure_time, args
 
 
 async def main():
-    SeedQ, FailureQ, client, no_coverage, total_coverage_data, args = await initalize()
-    interesting_time = {0:datetime.now().isoformat()}
-    failure_time = {0:datetime.now().isoformat()}
-    time_running = datetime.now()
+    SeedQ, FailureQ, client, no_coverage, total_coverage_data, interesting_time, failure_time, args = await initalize()
 
     try:
         server_process = await client.call_process("main_program")
@@ -210,11 +213,15 @@ async def main():
                         if no_coverage == False:
                             if server_process.poll() is not None:
                                 print("Server crashed/timeout! Adding to the FailureQ.")
+                                failure_time[len(failure_time.keys())] = datetime.now().isoformat()
                                 if status_code not in FailureQ[path][method]:
                                     FailureQ[path][method][status_code] = []
                                 FailureQ[path][method][status_code].append(
                                     (mutated_input_seed, response_payload)
                                 )
+                                if len(FailureQ[method][status_code]) == 1:
+                                    failure_time[len(failure_time.keys())] = datetime.now().isoformat()
+                                server_process.terminate()
                                 server_process = await client.call_process("main_program")
                                 print("Server Restarting!")
                                 await asyncio.sleep(2)
@@ -222,6 +229,7 @@ async def main():
                         if await is_interesting(
                                 total_coverage_data,
                                 current_coverage_data,
+                                interesting_time
                             ):
                                 add = True
                                 # Add to SeedQ
@@ -242,12 +250,15 @@ async def main():
                             FailureQ[method][status_code].append(
                                 (mutated_input_seed, response_payload)
                             )
+                            if len(FailureQ[method][status_code]) == 1:
+                                failure_time[len(failure_time.keys())] = datetime.now().isoformat()
                     server_process.terminate()
                     await asyncio.sleep(0.25)
                     current_coverage_data = await get_coverage_data(args.arg1)
                     if await is_interesting(
                             total_coverage_data,
-                            current_coverage_data,
+                            current_coverage_data, 
+                            interesting_time
                         ):
                             # Add to SeedQ
                             await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
@@ -289,6 +300,10 @@ async def main():
             json.dump(SeedQ, json_file)
         with open("FailureQ.json", "w") as json_file:
             json.dump(FailureQ, json_file)
+        with open("interesting.json", "w") as json_file:
+            json.dump(interesting_time, json_file)
+        with open("failure.json", "w") as json_file:
+            json.dump(failure_time, json_file)
         await asyncio.sleep(3)
         return
     """

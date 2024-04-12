@@ -26,12 +26,12 @@ class CoAPServer(CoAP):
         self.add_resource('advanced/', AdvancedResource())
         self.add_resource('advancedSeparate/', AdvancedResourceSeparate())
 
-        print "CoAP Server start on " + host + ":" + str(port)
-        print self.root.dump()
+        print("CoAP Server start on " + host + ":" + str(port))
+        print(self.root.dump())
 
 
 def usage():  # pragma: no cover
-    print "coapserver.py -i <ip address> -p <port>"
+    print("coapserver.py -i <ip address> -p <port>")
 
 
 def main(argv):  # pragma: no cover
@@ -58,9 +58,9 @@ def main(argv):  # pragma: no cover
     try:
         server.listen(10)
     except KeyboardInterrupt:
-        print "Server Shutdown"
+        print("Server Shutdown")
         server.close()
-        print "Exiting..."
+        print("Exiting...")
 
 
 if __name__ == "__main__":  # pragma: no cover

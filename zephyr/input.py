@@ -179,8 +179,9 @@ class TargetSendListener(Device.Listener):
         self.connection = connection
 
         # Discover all attributes (services, characteristitcs, descriptors, etc)
-        print("=== Discovering services")
+        # print("=== Discovering services")
         target = Peer(connection)
+        print(self.payload)
         self.status = await write_target(target, self.attribute, self.payload)
         self.result = await read_target(target, self.attribute)
         self.transcation_done = True
@@ -329,7 +330,7 @@ class BLEClient:
         return services
 
     async def send_payload(self, payload, service, characteristic):
-        byte_payload = payload["byte"]
+        byte_payload = payload["bytes"]
         return await self.connection_basic("send", characteristic, byte_payload)
 
 

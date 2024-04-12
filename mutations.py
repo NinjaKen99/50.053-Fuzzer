@@ -17,7 +17,12 @@ class mutation:
     @staticmethod
     def str_to_bytes(input: str):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
-        byte_set = [bin(ord(x))[2:].zfill(8) for x in input]
+        byte_set = []
+        for x in input:
+            try:
+                byte_set.append(bin(ord(x))[2:].zfill(8))
+            except TypeError as e:
+                byte_set.append(bin(ord(chr(x)))[2:].zfill(8))
         byte_count = len(byte_set)
         return byte_set, byte_count
     
@@ -42,7 +47,7 @@ class mutation:
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
         byte_set = []
         b32 = bin(input)[2:].zfill(64)
-        for i in range(byte_count):
+        for i in range(4):
             byte_set.append(b32[i*8 : 8 + i*8])
         byte_count = len(byte_set)
         return byte_set, byte_count
@@ -73,6 +78,7 @@ class mutation:
                 intermediate = mutation.b_to_int(input)
         else:
             intermediate = input
+        print(intermediate)
         if isinstance(intermediate, str):
             output1, output2 = mutation.str_to_bytes(intermediate)
         elif isinstance(intermediate, int):
@@ -85,6 +91,8 @@ class mutation:
             output = mutation.bytes_to_str(input)
         elif (datatype == int):
             output = mutation.bytes_to_int(input)
+        elif (datatype == bytes):
+            output = b''.join([bytes([int(byte, 2)]) for byte in input])
         return output
     
     @staticmethod
@@ -101,16 +109,33 @@ class mutation:
     def bitflip (input = "testing"):
         b, number, datatype = mutation.convert_bytes(input)
         # choose number of bits to change
-        count = choices[randint(0,2)]
-        index = randint(0, number-1)
+        if number < 1:
+            # Handle the case where the input is empty or the conversion failed
+            return input
+
+        # choose number of bits to change
+        count = choices[randint(0, 2)]
+
+        if number <= count:
+            # If the number of bytes is less than or equal to the number of bytes to flip,
+            # just flip all the bits
+            index = 0
+        else:
+            index = randint(0, number - 1)
         byte_chosen = b[index]
-        start_of_change = randint(1, bits_in_byte - count)
+        bits_in_byte = len(byte_chosen)
+        if bits_in_byte < count:
+            # If the number of bits to flip is greater than the number of bits in the byte,
+            # just flip all the bits
+            start_of_change = 0
+        else:
+            start_of_change = randint(0, bits_in_byte - count)
         replacement = byte_chosen[:start_of_change]
         for i in range (start_of_change, start_of_change + count):
-                if (byte_chosen[i] == '1'):
-                    replacement += '0'
-                elif (byte_chosen[i] == '0'):
-                    replacement += '1'
+            if (byte_chosen[i] == '1'):
+                replacement += '0'
+            elif (byte_chosen[i] == '0'):
+                replacement += '1'
         replacement += byte_chosen[start_of_change + count:]
         b[index] = replacement
         return mutation.convert_back(b, datatype)
@@ -119,14 +144,22 @@ class mutation:
     @staticmethod
     def byteflip (input = "testing"):
         b, number, datatype = mutation.convert_bytes(input)
+        if len(b) < 1:
+            # Handle the case where the input is empty or the conversion failed
+            return input
         # choose number of bytes to change
         count = choices[randint(0,2)]
         output = ""
-        if (datatype == int and count == 4):
+        if number <= count:
+            # If the number of bytes is less than or equal to the number of bytes to flip,
+            # just flip all the bytes
             start_of_change = 0
         else:
-            start_of_change = randint(0, number - 1 - count)
+            start_of_change = randint(0, number - count - 1)
         for bytes in range (start_of_change, start_of_change + count):
+            if bytes >= len(b):
+                # Handle the case where the index is out of range
+                break
             temp = ""
             for bit in b[bytes]:
                 if (bit == '1'):
@@ -196,11 +229,20 @@ class mutation:
     @staticmethod
     def delete_bytes (input = "testing"):
         b, number, datatype = mutation.convert_bytes(input)
+        if number <= 0:
+            return mutation.convert_back(b, datatype)
         if (datatype == str):
             start_point = randint(0, number - 1)
             limit = (number - 1) - start_point
             count = randint(0, limit)
         elif (datatype == int):
+            start_point = randint(0, number - 1)
+            limit = (number - 2) - start_point
+            if limit <= 0:
+                count = 0
+            else:
+                count = randint(0, limit)
+        else:
             start_point = randint(0, number - 1)
             limit = (number - 2) - start_point
             if limit <= 0:
@@ -270,13 +312,13 @@ class mutation:
 #print(mutation.bytes_to_int(test_set))
 #print(mutation.delete_bytes(123))
 
-message = "testing"
-byte_message = bytes(message, 'utf-8')
-number = 383
-number = 127
-bytes_number = number.to_bytes(2, 'big')
-print(type(bytes_number))
-try:
-    print(mutation.b_to_str(bytes_number))
-except:
-    print(mutation.b_to_int(bytes_number))
+# message = "testing"
+# byte_message = bytes(message, 'utf-8')
+# number = 383
+# number = 127
+# bytes_number = number.to_bytes(2, 'big')
+# print(type(bytes_number))
+# try:
+#     print(mutation.b_to_str(bytes_number))
+# except:
+#     print(mutation.b_to_int(bytes_number))

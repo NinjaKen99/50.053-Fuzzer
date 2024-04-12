@@ -256,7 +256,7 @@
           "id": {
             "type": "integer",
             "readOnly": true,
-            "example": [1, 2, 3],
+            "example": [1],
             "maximum": 9223372036854776000,
             "minimum": -922337203685477600
 
@@ -264,14 +264,14 @@
           "name": {
             "type": "string",
             "maxLength": 2,
-            "example": ["pr", "p2", "pr"]
+            "example": ["pr"]
             
             
           },
           "info": {
             "type": "string",
             "maxLength": 2,
-            "example": ["in", "gp", "hh", "he"]
+            "example": ["in"]
           },
           "price": { 
             "type": "integer",
@@ -279,7 +279,7 @@
             "minimum": -9223372036854776000,
             "format": "int64",
             "nullable": true,
-            "example":["12", "23", "45"]
+            "example":[12]
           }
         },
         "required": [

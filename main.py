@@ -14,6 +14,7 @@ import time
 from coap.input import COAPClient
 from django.input import DjangoClient
 import assign_energy
+from initalize import init_parser, initalize
 from mutations import mutation
 from openapi_parser import parse
 from openapiparser import parse_new_openapi, parse_openapi, Schema, Object, Property
@@ -24,13 +25,29 @@ from bumble.gatt_client import ServiceProxy, CharacteristicProxy, DescriptorProx
 from bumble.att import Attribute
 import traceback
 import subprocess
-import coverage
 
 
 def random_key(dictionary):
     return random.choice(list(dictionary.keys()))
 
 async def choose_next_seed(SeedQ:dict, FailureQ:dict, type):
+    """
+    The function `choose_next_seed` selects a path or attribute along with a seed based on the type
+    specified, and handles failures by updating dictionaries `SeedQ` and `FailureQ`.
+    
+    :param SeedQ: SeedQ is a dictionary containing information about seeds for different paths or
+    attributes. It includes the methods and seeds associated with each path or attribute
+    :type SeedQ: dict
+    :param FailureQ: FailureQ is a dictionary that keeps track of failed requests for different paths or
+    attributes. It stores information about failures for each path or attribute, including the methods
+    that failed for each path and the seeds that were used for each attribute
+    :type FailureQ: dict
+    :param type: The `type` parameter in the `choose_next_seed` function represents the type of protocol
+    being used, which can be either "http" or "coap"
+    :return: The function `choose_next_seed` returns different values based on the input type. If the
+    type is "http" or "coap", it returns a tuple containing the path and seed values. If the type is not
+    "http" or "coap", it returns a tuple containing the seed, attribute, and object values.
+    """
     if type == "http" or type == "coap":
         path = random_key(SeedQ)
         if SeedQ[path]["methods"] == {}:
@@ -41,7 +58,10 @@ async def choose_next_seed(SeedQ:dict, FailureQ:dict, type):
             FailureQ[path] = {}
             for method in SeedQ[path]["methods"]:
                 FailureQ[path][method] = {}
-        seed = random.choice(SeedQ[path]["seeds"])
+        if len(SeedQ[path]["seeds"]) <= 0:
+            seed = {"string": "sample"}
+        else:
+            seed = random.choice(SeedQ[path]["seeds"])
         return path, seed
 
     else:
@@ -52,33 +72,73 @@ async def choose_next_seed(SeedQ:dict, FailureQ:dict, type):
 
 
 async def mutate_openapi(original_input, schema: Object):
+    """
+    The function `mutate_openapi` takes an original input and a schema object, and mutates the input
+    based on the schema properties.
+    
+    :param original_input: The `original_input` parameter in the `mutate_openapi` function is expected
+    to be a dictionary containing the input data that you want to mutate based on the provided schema.
+    This input data will be modified according to the rules defined in the schema object
+    :param schema: The `schema` parameter in the `mutate_openapi` function is expected to be an object
+    that defines the structure of the input data. The function then mutates the original input data
+    based on the schema provided. The schema can specify the type of each property in the input data,
+    such as
+    :type schema: Object
+    :return: The function `mutate_openapi` returns the mutated input based on the provided schema. The
+    mutated input is a dictionary containing the original input data with some mutations applied
+    according to the schema properties. If the schema is a string, an empty string is returned. If the
+    schema type is "object", the function iterates over the original input and applies mutations based
+    on the schema properties. If the schema
+    """
     muatated_input = dict()
-    if schema.type.value == "object":
+    if type(schema) == str:
+        return ""
+    elif schema.type.value == "object":
         for x in original_input:
             i: Property
             for i in schema.properties:
                 if x == i.name:
                     muatated_input[x] = copy.deepcopy(original_input[x])
+
                     if i.schema.type == "integer":
-                        # muatated_input[x] = mutation.random_byte(
-                        #     int(muatated_input[x])
-                        # )
-                        muatated_input[x] = int(muatated_input[x])
+                        muatated_input[x] = mutation.random_mutation(
+                            int(muatated_input[x])
+                        )
+                        # muatated_input[x] = int(muatated_input[x])
                     else:
-                        # muatated_input[x] = mutation.random_byte(
-                        #     muatated_input[x]
-                        # )
-                        muatated_input[x] = str(muatated_input[x])
+                        muatated_input[x] = mutation.random_mutation(
+                            str(muatated_input[x])
+                        )
+                        
+                        # muatated_input[x] = str(muatated_input[x])
                     break
     elif schema.type.value == "string":
         muatated_input = copy.deepcopy(original_input)
-        muatated_input["string"] = mutation.random_byte(muatated_input["string"])
+        muatated_input = mutation.random_mutation(muatated_input["string"])
     return muatated_input
 
 
 async def add_to_SeedQ(SeedQ, path, mutated_input_seed, type):
+    """
+    The function `add_to_SeedQ` appends mutated input seeds to a specified path in a SeedQ dictionary
+    based on the type provided.
+    
+    :param SeedQ: SeedQ is a dictionary that contains information about different paths and their
+    corresponding seeds. Each path in SeedQ is a key that maps to a dictionary containing a list of
+    seeds
+    :param path: The `path` parameter in the `add_to_SeedQ` function is used to specify the location
+    within the `SeedQ` dictionary where the mutated input seed should be added
+    :param mutated_input_seed: It seems like you missed providing the details of the
+    `mutated_input_seed` parameter. Could you please provide more information about it so that I can
+    assist you further with the `add_to_SeedQ` function?
+    :param type: The `type` parameter in the `add_to_SeedQ` function is used to determine how the
+    `mutated_input_seed` should be added to the `SeedQ`. Depending on the value of `type`, the function
+    will append the `mutated_input_seed` in a specific format to
+    """
     if type == "ble":
-        SeedQ[path]["seeds"].append(mutated_input_seed["byte"])
+        SeedQ[path]["seeds"].append(mutated_input_seed["bytes"])
+    elif type == "coap":
+        SeedQ[path]["seeds"].append({"string":mutated_input_seed})
     else:
         SeedQ[path]["seeds"].append(mutated_input_seed)
 
@@ -88,97 +148,11 @@ async def seed_and_mutate_ble(SeedQ: dict):
     
 
 
-async def initalize():
-    parser = argparse.ArgumentParser(description="Description of your script")
-    parser.add_argument("arg1", type=str, help="Protocol of Request")
-    parser.add_argument(
-        "--file", type=str, help="OpenAPI 3.03 json file", required=False
-    )
-    parser.add_argument(
-        "--nocoverage", action="store_true", help="Disable code coverage"
-    )
-    parser.add_argument("--resume", action="store_true", help="Continue off from last fuzzing session")
-    args = parser.parse_args()
-
-    if args.arg1 not in ["coap", "http", "ble"]:
-        raise ValueError("Invalid protocol")
-    # Check if the --file argument is provided
-    if args.file and args.arg1 != "ble":
-        # Use the value of the --file argument in the parse function
-        grammar = parse(args.file)
-        url = grammar.servers[0]
-    elif args.arg1 == "ble":
-        grammar = None
-        url = None
-    else:
-        raise ValueError("no file argument provided")
-    # Specify the directory where you want to delete files
-    directory = "./coverages"
-
-    # List all files in the directory
-    files = os.listdir(directory)
-
-    # Filter files that start with ".coverage"
-    coverage_files = [file for file in files if file.startswith(".coverage")]
-    # coverage_files.remove(".coverage")
-    # Delete each file
-    if args.resume == False:
-        for file in coverage_files:
-            file_path = os.path.join(directory, file)
-            os.remove(file_path)
-        #remove lcov info
-        try:    
-            subprocess.run(["lcov", "--zerocounters", "-d", "./targets/Zephyr"])
-        except:
-            pass
-        try:
-            os.remove("lcov.info")
-        except:
-            pass
-    FailureQ = {}
-    interesting_time = {0:datetime.now().isoformat()}
-    failure_time = {0:datetime.now().isoformat()}
-    match args.arg1:
-
-        case "coap":
-            client = COAPClient(url.url)
-            SeedQ = parse_new_openapi(grammar)
-
-        case "http":
-            client = DjangoClient(url.url)
-            SeedQ = parse_new_openapi(grammar)
-
-        case "ble":
-            client = BLEClient(9000)
-            await client.initalize_transport()
-            SeedQ = await client.get_services()          
-
-        case _:
-            raise ValueError("Invalid protocol")
-    
-    if args.resume == True:
-        with open('SeedQ.json') as f:
-            existing_SeedQ = json.load(f)
-        for x in existing_SeedQ:
-            SeedQ[x]["seeds"] = existing_SeedQ[x]["seeds"]
-        
-        with open("FailureQ.json") as g:
-            FailureQ = json.load(g)
-
-        with open("interesting.json") as f:
-            interesting_time = json.load(f)
-        with open("failure.json") as f:
-            failure_time = json.load(f)
-    no_coverage = args.nocoverage
-    # load all examples/inputs into SeedQ
-    # select random path and method in grammar
-    total_coverage_data = await get_coverage_data(args.arg1)
-    return SeedQ, FailureQ, client, no_coverage, total_coverage_data, interesting_time, failure_time, args
 
 
 async def main():
-    SeedQ, FailureQ, client, no_coverage, total_coverage_data, interesting_time, failure_time, args = await initalize()
-
+    SeedQ, FailureQ, client, no_coverage, total_coverage_data, interesting_time, failure_time, tests, args = await initalize()
+    start_time = time.time()
     try:
         server_process = await client.call_process("main_program")
         await asyncio.sleep(2)
@@ -186,6 +160,7 @@ async def main():
         print(e + " " + "Not able to run server, please set --no-coverage")
         raise e
     try:
+        await asyncio.sleep(5)
         while SeedQ:
             # AssignEnergy
             if args.arg1 == "coap" or args.arg1 == "http":
@@ -197,7 +172,7 @@ async def main():
             elif args.arg1 == "ble":
                 # TODO choose next service/charactistics to fuzz
                 seed, path, method = await choose_next_seed(SeedQ, FailureQ, args.arg1)
-                seed = {"byte": seed}
+                seed = {"bytes": seed}
             energy = assign_energy.AssignEnergy(seed)
             for _ in range(energy):
                 # For Django and Coap
@@ -208,47 +183,61 @@ async def main():
                         response_payload, status_code = await client.send_payload(
                             mutated_input_seed, path, method, SeedQ[path]["schema"]
                         )
-                        await asyncio.sleep(0.25)
+                        
+                        tests[len(tests)] = datetime.now().isoformat()
+                        await asyncio.sleep(0.2)
                         # Check if the process has terminated
                         if no_coverage == False:
                             if server_process.poll() is not None:
                                 print("Server crashed/timeout! Adding to the FailureQ.")
-                                failure_time[len(failure_time.keys())] = datetime.now().isoformat()
+                                if status_code not in FailureQ[path]:
+                                    FailureQ[path][method] = dict()
                                 if status_code not in FailureQ[path][method]:
                                     FailureQ[path][method][status_code] = []
                                 FailureQ[path][method][status_code].append(
                                     (mutated_input_seed, response_payload)
                                 )
-                                if len(FailureQ[method][status_code]) == 1:
+                                if len(FailureQ[path][method][status_code]) == 1:
                                     failure_time[len(failure_time.keys())] = datetime.now().isoformat()
                                 server_process.terminate()
                                 server_process = await client.call_process("main_program")
                                 print("Server Restarting!")
                                 await asyncio.sleep(2)
+
                         current_coverage_data = await get_coverage_data(args.arg1)
                         if await is_interesting(
                                 total_coverage_data,
                                 current_coverage_data,
-                                interesting_time
+                                interesting_time,
+                                mutated_input_seed,
+                                f'{path}:{method}'
                             ):
                                 add = True
                                 # Add to SeedQ
+                        
                     if add == True:
                         await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
 
 
+
                 elif args.arg1 == "ble":
-                    mutated_input_seed = seed
-                    driver = client.send_payload(seed, path, method)
+                    mutated_input_seed = dict()
+                    tests[len(tests.keys())] = datetime.now().isoformat()
+                    mutated_input_seed["bytes"] = mutation.random_mutation(seed["bytes"])
+                    if isinstance(mutated_input_seed["bytes"] , int):
+                        mutated_input_seed["bytes"]  = bytes([mutated_input_seed["bytes"] ])
+                    elif isinstance(mutated_input_seed["bytes"] , str):
+                        mutated_input_seed["bytes"]  = mutated_input_seed["bytes"].encode("utf-8")
+                    driver = client.send_payload(mutated_input_seed, path, method)
                     server_process = await client.call_process()
                     response_payload, status_code = await driver
                     if no_coverage == False:
                         if server_process.poll() is not None:
                             print("Server crashed/timeout! Adding to the FailureQ.")
-                            if status_code not in FailureQ[path][method]:
+                            if status_code not in FailureQ[method]:
                                 FailureQ[method][status_code] = []
                             FailureQ[method][status_code].append(
-                                (mutated_input_seed, response_payload)
+                                (mutated_input_seed["bytes"].hex(), response_payload)
                             )
                             if len(FailureQ[method][status_code]) == 1:
                                 failure_time[len(failure_time.keys())] = datetime.now().isoformat()
@@ -258,10 +247,26 @@ async def main():
                     if await is_interesting(
                             total_coverage_data,
                             current_coverage_data, 
-                            interesting_time
+                            interesting_time,
+                            mutated_input_seed,
+                            method
                         ):
                             # Add to SeedQ
                             await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
+                
+                os.system('cls' if os.name=='nt' else 'clear')
+                print("Finished sending mutated input:")
+                print(mutated_input_seed)
+                print("At: ")
+                print(path)
+                print(method)
+                print()
+                print("No of Interesting Test Cases: " + str(len(interesting_time.keys()) - 1))
+                print("No of Failures: " + str(len(failure_time.keys()) - 1))
+                print("No of tests: " + str(len(tests.keys()) - 1))
+                current_runtime = time.time() - start_time
+                print(f"Current running time: {current_runtime:.2f} secs")
+
 
     except KeyboardInterrupt as e:
         print(e)
@@ -273,7 +278,10 @@ async def main():
         try:
             print("\nShutting Down Server! please wait...")
             server_process.send_signal(signal.SIGINT)
-            
+            # subprocess.run(["sudo", "fuser", "-k", "8000/tcp"])
+            # subprocess.run(["sudo", "fuser", "-k", "9000/tcp"])
+            # subprocess.run(["sudo", "fuser", "-k", "5683/tcp"])
+            await asyncio.sleep(3)
             pass
         except:
             pass
@@ -294,8 +302,18 @@ async def main():
                 SeedQ[attribute].pop("object")
                 new_list = list()
                 for x in SeedQ[attribute]["seeds"]:
-                    new_list.append(x.hex())
+                    try:
+                        new_list.append(x.hex())
+                    except:
+                        new_list.append(x.encode('utf-8').hex())
                 SeedQ[attribute]["seeds"] = new_list
+            for x in interesting_time:
+                if x != 0:
+                    if type(interesting_time[x]) != str:
+                        try:
+                            interesting_time[x]["input"]["bytes"] = interesting_time[x]["input"]["bytes"].hex()
+                        except:
+                            interesting_time[x]["input"]["bytes"] = interesting_time[x]["input"]["bytes"].encode('utf-8').hex()
         with open("SeedQ.json", "w") as json_file:
             json.dump(SeedQ, json_file)
         with open("FailureQ.json", "w") as json_file:
@@ -304,31 +322,22 @@ async def main():
             json.dump(interesting_time, json_file)
         with open("failure.json", "w") as json_file:
             json.dump(failure_time, json_file)
-        await asyncio.sleep(3)
+        with open("tests.json", "w") as json_file:
+            json.dump(tests, json_file)
         return
-    """
-        Step 1: Compile Openapi json to a readable format
-        Step 2: Randomly chooose a path
-        Step 3: retieve seed from dictionary.json
-        Step 4: Do fuzzing
-        
-        t = ChooseNext(SeedQ)
-        E(t) = AssignEnergy(t)
-        for i from 1 to E(t) do
-            t` = MutateInput(t)
-            if (t` reveals a bug/crash) then
-                add t` to FailureQ
-            else if Isinteresting(Q)
-                add t'' to SeedQ
-        """
 
 
 if __name__ == "__main__":
     asyncio.run(main())
     # file = asyncio.run(get_latest_file("./coverages"))
     # os.remove(file)
-    subprocess.run(["coverage", "combine", "--rcfile=./.coveragerc"])
-    subprocess.run(["coverage", "report"])
+    args = asyncio.run(init_parser())
+    if args.python2 == True and (args.arg1 == "http" or args.arg1 == "coap"):
+        subprocess.run(["python2", "-m", "coverage", "combine", "--rcfile=./.coveragerc", "-a"])
+        subprocess.run(["python2", "-m", "coverage", "report"])
+    elif args.arg1 == "http" or args.arg1 == "coap":
+        subprocess.run(["coverage", "combine", "--rcfile=./.coveragerc", "-a"])
+        subprocess.run(["coverage", "report"])
 
     print("removing htmlcov...")
     try:

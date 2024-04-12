@@ -46,22 +46,24 @@ class COAPClient:
                 raise ValueError(f"Unknown code: {code}")
 
     async def send_payload(self, payload, uri, code, schema):
-        protocol = await Context.create_client_context()
-        code = await self.str_to_code(code)
-        payload = payload["string"]
-        print(f"Sending payload: {payload} to {self.url}{uri} with {code}")
-        # await asyncio.sleep(random.uniform(0, 1))  # Simulate network delay
-        msg = Message(
-            code=code, uri=f"{self.url}{uri}", payload=bytes(payload, "utf-8")
-        )
-        response: Message = await protocol.request(msg).response
-        print(response.__dict__)
-        # Extract coverage data from the response
-        # if response.status_code == 200:
-        #     data = response.json()
-        #     coverage_data = data.get('coverage', {})
-            # Return coverage data along with other response details
-        return response.payload.decode(), await self.code_to_str(response.code)
+        try:
+            protocol = await Context.create_client_context()
+            code = await self.str_to_code(code)
+            # print(f"Sending payload: {payload} to {self.url}{uri} with {code}")
+            msg = Message(
+                code=code, uri=f"{self.url}{uri}", payload=bytes(payload, "utf-8")
+            )
+            response: Message = await protocol.request(msg).response
+            # Extract coverage data from the response
+            # if response.status_code == 200:
+            #     data = response.json()
+            #     coverage_data = data.get('coverage', {})
+                # Return coverage data along with other response details
+            return response.payload.decode(), await self.code_to_str(response.code)
+        except Exception as e:
+            print("Something happened!")
+            print(e)
+            return None, None
 
         
 

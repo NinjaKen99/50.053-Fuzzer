@@ -107,6 +107,7 @@ class DjangoClient:
             return None, None
 
         except Exception as e:
+            print("Something happened!", e)
             return None, None
 
 

@@ -46,7 +46,6 @@ async def get_coverage_data(type):
     # Example usage
     if type == "http" or type == "coap":
         latest_file_path = await get_latest_file("./coverages")
-        print(latest_file_path)
         cov = coverage.Coverage(
             data_file=latest_file_path, config_file="./.coveragerc", auto_data=True
         )
@@ -86,7 +85,7 @@ async def has_new_coverage(total_coverage_data: dict, current_coverage_data: dic
     return is_interesting
 
 
-async def is_interesting(total_coverage_data, current_coverage_data, interesting_time):
+async def is_interesting(total_coverage_data, current_coverage_data, interesting_time, mutated_input_seed, method):
     """
     Check if the response indicates a potential error, contains sensitive information,
     or if new coverage was detected.
@@ -117,7 +116,7 @@ async def is_interesting(total_coverage_data, current_coverage_data, interesting
     new_coverage = await has_new_coverage(total_coverage_data, current_coverage_data)
     if new_coverage:
         print("New code coverage detected, which is interesting.")
-        interesting_time[len(interesting_time.keys())] = datetime.now().isoformat()
+        interesting_time[len(interesting_time.keys())] = {"timestamp": datetime.now().isoformat(), "route": str(method), "input": mutated_input_seed}
         return True
     # No indicators of interest found
     return False

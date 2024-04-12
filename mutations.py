@@ -145,8 +145,10 @@ class mutation:
     @staticmethod
     def insert_bytes (input = "testing", sample = "anything"):
         # Needs other cases to copy bytes from
-        b1, number1 = mutation.str_to_bytes(input)
-        b2, number2 = mutation.str_to_bytes(sample)
+        b1, number1, datatype1 = mutation.convert_bytes(input)
+        b2, number2, datatype2 = mutation.convert_bytes(sample)
+        if (datatype1 == int):
+            print("Input type may result in failure.")
         b3 = []
         extract = randint(0,number2 -1)
         insertion = randint(0, number1 -1)
@@ -155,7 +157,7 @@ class mutation:
         b3.append(b2[extract])
         for i in range(insertion, number1):
             b3.append(b1[i])
-        output = ''.join([chr(int(x, 2)) for x in b3])
+        output = mutation.convert_back(b3, datatype1)
         return output
     
     # Change a single byte in test case

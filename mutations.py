@@ -8,6 +8,7 @@ ascii_max = 256
 ascii_uppercase_range = [65, 90]
 ascii_lowercase_range = [97, 122]
 ascii_number_range = [48, 57]
+whitespace = "00100000"
 
 
 class mutation:
@@ -18,6 +19,10 @@ class mutation:
     def str_to_bytes(input: str):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
         byte_set = [bin(ord(x))[2:].zfill(8) for x in input]
+        initial_byte_count = len(byte_set)
+        added = 128 - initial_byte_count
+        adding = ['00000000' for i in range(added)]
+        byte_set = adding + byte_set
         byte_count = len(byte_set)
         return byte_set, byte_count
     
@@ -41,9 +46,9 @@ class mutation:
     def int_to_bytes(input: int):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
         byte_set = []
-        b32 = bin(input)[2:].zfill(64)
+        b64 = bin(input)[2:].zfill(64)
         for i in range(byte_count):
-            byte_set.append(b32[i*8 : 8 + i*8])
+            byte_set.append(b64[i*8 : 8 + i*8])
         byte_count = len(byte_set)
         return byte_set, byte_count
     
@@ -140,8 +145,11 @@ class mutation:
     @staticmethod
     def insert_bytes (input = "testing", sample = "anything"):
         # Needs other cases to copy bytes from
-        b1, number1 = mutation.str_to_bytes(input)
-        b2, number2 = mutation.str_to_bytes(sample)
+        b1, number1, datatype1 = mutation.convert_bytes(input)
+        b2, number2, datatype2 = mutation.convert_bytes(sample)
+        if (datatype1 == int):
+            print("Input may not work")
+            return input
         b3 = []
         extract = randint(0,number2 -1)
         insertion = randint(0, number1 -1)
@@ -183,7 +191,6 @@ class mutation:
                 replacement += '0'
         # Choose which byte to replace
         rng = randint(0,1)
-        half = int(number/2)
         if (rng == 1):
             rbyte = randint(0, 3)
         else:
@@ -275,7 +282,9 @@ byte_message = bytes(message, 'utf-8')
 number = 383
 number = 127
 bytes_number = number.to_bytes(2, 'big')
-print(type(bytes_number))
+print('test')
+print(chr(int('00100011', 2)) + chr(int('00000000', 2)) + chr(int('00100011', 2)))
+print('end')
 try:
     print(mutation.b_to_str(bytes_number))
 except:

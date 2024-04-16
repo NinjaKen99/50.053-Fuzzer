@@ -17,6 +17,7 @@ bumble = {path = "zephyr/bumble"}
 coverage-lcov = "^0.2.5"
 toml = "^0.10.2"
 coverage = "^6"
+lcovparser = {path = "zephyr/lcovparser"}
 
 
 [tool.poetry.group.coap.dependencies]

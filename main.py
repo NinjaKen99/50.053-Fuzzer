@@ -26,7 +26,6 @@ from bumble.att import Attribute
 import traceback
 import subprocess
 
-
 def random_key(dictionary):
     return random.choice(list(dictionary.keys()))
 
@@ -146,13 +145,27 @@ async def add_to_SeedQ(SeedQ, path, mutated_input_seed, type):
 async def seed_and_mutate_ble(SeedQ: dict):
     attribute = random_key(SeedQ)
     return random.choice(SeedQ[attribute]["value"]), None, SeedQ[attribute]["object"]
-    
-
-
 
 
 async def main():
+    test_gen_times = {}
+    test_exec_times = {}
     SeedQ, FailureQ, client, no_coverage, total_coverage_data, interesting_time, failure_time, tests, args = await initalize()
+
+    # for session folders
+    app_name = args.arg1
+    base_folder = os.path.join("sessions", app_name)
+    os.makedirs(base_folder, exist_ok=True)
+    session_folders = [f for f in os.listdir(base_folder) if f.startswith("session")]
+    if session_folders:
+        session_folders.sort(key=lambda x: int(x.split()[-1]))
+        last_session = session_folders[-1]
+        session_number = int(last_session.split()[-1]) + 1
+    else:
+        session_number = 1
+    session_folder = os.path.join(base_folder, f"session {session_number}")
+    os.makedirs(session_folder, exist_ok=True)
+
     start_time = time.time()
     try:
         server_process = await client.call_process("main_program")
@@ -177,14 +190,27 @@ async def main():
             energy = assign_energy.AssignEnergy(seed)
             for _ in range(energy):
                 # For Django and Coap
+                test_id = len(tests)
+                test_gen_start = time.time()
                 if args.arg1 == "coap" or args.arg1 == "http":
                     mutated_input_seed = await mutate_openapi(seed, SeedQ[path]["schema"])
+
+                    test_gen_end = time.time()
+
                     add = False
                     for method in SeedQ[path]["methods"]:
+
+                        test_exec_start = time.time()
+
                         response_payload, status_code = await client.send_payload(
                             mutated_input_seed, path, method, SeedQ[path]["schema"]
                         )
-                        
+
+                        test_exec_end = time.time()
+
+                        print(f"Test Generation Time: {test_gen_end - test_gen_start:.2f} secs")
+                        print(f"Test Execution Time: {test_exec_end - test_exec_start:.2f} secs")
+
                         tests[len(tests)] = datetime.now().isoformat()
                         await asyncio.sleep(0.2)
                         # Check if the process has terminated
@@ -200,6 +226,7 @@ async def main():
                                 )
                                 if len(FailureQ[path][method][status_code]) == 1:
                                     failure_time[len(failure_time.keys())] = datetime.now().isoformat()
+
                                 server_process.terminate()
                                 server_process = await client.call_process("main_program")
                                 print("Server Restarting!")
@@ -219,19 +246,35 @@ async def main():
                     if add == True:
                         await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
 
-
+                    test_gen_times[test_id] = test_gen_end - test_gen_start
+                    test_exec_times[test_id] = test_exec_end - test_exec_start
 
                 elif args.arg1 == "ble":
                     mutated_input_seed = dict()
                     tests[len(tests.keys())] = datetime.now().isoformat()
-                    mutated_input_seed["bytes"] = mutation.random_mutation(seed["bytes"], 32)
+
+                    test_gen_start = time.time()
+
+                    mutated_input_seed["bytes"] = mutation.random_mutation(seed["bytes"])
+
+                    test_gen_end = time.time()
+
                     if isinstance(mutated_input_seed["bytes"] , int):
                         mutated_input_seed["bytes"]  = bytes([mutated_input_seed["bytes"] ])
                     elif isinstance(mutated_input_seed["bytes"] , str):
                         mutated_input_seed["bytes"]  = mutated_input_seed["bytes"].encode("utf-8")
+
+                    test_exec_start = time.time()
+
                     driver = client.send_payload(mutated_input_seed, path, method)
                     server_process = await client.call_process()
                     response_payload, status_code = await driver
+
+                    test_exec_end = time.time()
+
+                    print(f"Test Generation Time: {test_gen_end - test_gen_start:.2f} secs")
+                    print(f"Test Execution Time: {test_exec_end - test_exec_start:.2f} secs")
+
                     if no_coverage == False:
                         if server_process.poll() is not None:
                             print("Server crashed/timeout! Adding to the FailureQ.")
@@ -242,6 +285,7 @@ async def main():
                             )
                             if len(FailureQ[method][status_code]) == 1:
                                 failure_time[len(failure_time.keys())] = datetime.now().isoformat()
+
                     server_process.terminate()
                     await asyncio.sleep(0.25)
                     current_coverage_data = await get_coverage_data(args.arg1)
@@ -254,6 +298,9 @@ async def main():
                         ):
                             # Add to SeedQ
                             await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
+
+                    test_gen_times[test_id] = test_gen_end - test_gen_start
+                    test_exec_times[test_id] = test_exec_end - test_exec_start
                 
                 os.system('cls' if os.name=='nt' else 'clear')
                 print("Finished sending mutated input:")
@@ -277,6 +324,11 @@ async def main():
 
     finally:
         try:
+            with open(os.path.join(session_folder, "test_gen_times.json"), "w") as f:
+                json.dump(test_gen_times, f)
+            with open(os.path.join(session_folder, "test_exec_times.json"), "w") as f:
+                json.dump(test_exec_times, f)
+
             print("\nShutting Down Server! please wait...")
             server_process.send_signal(signal.SIGINT)
             # subprocess.run(["sudo", "fuser", "-k", "8000/tcp"])
@@ -315,15 +367,16 @@ async def main():
                             interesting_time[x]["input"]["bytes"] = interesting_time[x]["input"]["bytes"].hex()
                         except:
                             interesting_time[x]["input"]["bytes"] = interesting_time[x]["input"]["bytes"].encode('utf-8').hex()
-        with open("SeedQ.json", "w") as json_file:
+
+        with open(os.path.join(session_folder, "SeedQ.json"), "w") as json_file:
             json.dump(SeedQ, json_file)
-        with open("FailureQ.json", "w") as json_file:
+        with open(os.path.join(session_folder, "FailureQ.json"), "w") as json_file:
             json.dump(FailureQ, json_file)
-        with open("interesting.json", "w") as json_file:
+        with open(os.path.join(session_folder, "interesting.json"), "w") as json_file:
             json.dump(interesting_time, json_file)
-        with open("failure.json", "w") as json_file:
+        with open(os.path.join(session_folder, "failure.json"), "w") as json_file:
             json.dump(failure_time, json_file)
-        with open("tests.json", "w") as json_file:
+        with open(os.path.join(session_folder, "tests.json"), "w") as json_file:
             json.dump(tests, json_file)
         return
 

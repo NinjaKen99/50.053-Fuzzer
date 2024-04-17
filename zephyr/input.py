@@ -155,6 +155,7 @@ class TargetSendListener(Device.Listener):
     transcation_done = False
     result = None
     status = None
+    timeout = False
 
     def __init__(self, attribute, payload) -> None:
         super().__init__()
@@ -181,10 +182,16 @@ class TargetSendListener(Device.Listener):
         # Discover all attributes (services, characteristitcs, descriptors, etc)
         # print("=== Discovering services")
         target = Peer(connection)
-        print(self.payload)
-        self.status = await write_target(target, self.attribute, self.payload)
-        self.result = await read_target(target, self.attribute)
-        self.transcation_done = True
+        try:
+            self.status = await write_target(target, self.attribute, self.payload)
+            self.result = await read_target(target, self.attribute)
+        except TimeoutError as e:
+            print(e)
+        
+        finally:
+            self.status = None
+            self.result = None
+            self.transcation_done = True
         return
 
 

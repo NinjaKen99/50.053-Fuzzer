@@ -16,11 +16,16 @@ class mutation:
     ### FUNCTIONS USED TO ASSIST MUTATION
     # Covert input string into array of bytes
     @staticmethod
-    def str_to_bytes(input: str):
+    def str_to_bytes(input: str, numbytes):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
         byte_set = [bin(ord(x))[2:].zfill(8) for x in input]
         initial_byte_count = len(byte_set)
-        added = 128 - initial_byte_count
+        if numbytes == 64:
+            added = 128 - initial_byte_count
+        else:
+            added = 32 - initial_byte_count
+
+
         adding = ['00000000' for i in range(added)]
         byte_set = adding + byte_set
         byte_count = len(byte_set)
@@ -29,7 +34,31 @@ class mutation:
     # Convert array of bytes into string
     @staticmethod
     def bytes_to_str(input: list):
-        return ''.join([chr(int(x, 2)) for x in input])
+        new_list =  []
+        first = False
+        for x in input:
+            if first == False and x == "00000000":
+                continue
+            elif first == True and x == "00000000":
+                new_list.append(chr(int("00100000", 2)))
+            else:
+                new_list.append(chr(int(x, 2)))
+                first = True
+        return ''.join(new_list)
+    
+    @staticmethod
+    def remove_null_byte(input:list):
+        new_list =  []
+        first = False
+        for x in input:
+            if first == False and x == "00000000":
+                continue
+            elif first == True and x == "00000000":
+                new_list.append(chr(int("00100000", 2)))
+            else:
+                new_list.append(chr(int(x, 2)))
+                first = True
+        return ''.join(new_list)
     
     # Convert byte object into str
     @staticmethod
@@ -43,19 +72,28 @@ class mutation:
     
     # Covert input int into array of bytes
     @staticmethod
-    def int_to_bytes(input: int):
+    def int_to_bytes(input: int, numbytes):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
         byte_set = []
-        b64 = bin(input)[2:].zfill(64)
+        neg = False
+        if bin(input)[0] == '-':
+            b64 = bin(input)[3:].zfill(64)
+            neg = True
+        else:
+            b64 = bin(input)[2:].zfill(64)
+        byte_count = numbytes//8
         for i in range(byte_count):
             byte_set.append(b64[i*8 : 8 + i*8])
         byte_count = len(byte_set)
-        return byte_set, byte_count
+        return byte_set, byte_count, neg
     
     # Convert array of bytes into integer
     @staticmethod
-    def bytes_to_int(input: list):
-        return int(''.join(x for x in input) , 2)
+    def bytes_to_int(input: list, neg):
+        no = int(''.join(x for x in input) , 2)
+        if neg == True:
+            no *= -1
+        return no
     
     # Convert b to int
     @staticmethod
@@ -69,7 +107,7 @@ class mutation:
     
     
     @staticmethod
-    def convert_bytes(input):
+    def convert_bytes(input, numbytes):
         datatype = type(input)
         if (datatype == bytes):
             try:
@@ -78,19 +116,20 @@ class mutation:
                 intermediate = mutation.b_to_int(input)
         else:
             intermediate = input
-        print(intermediate)
         if isinstance(intermediate, str):
-            output1, output2 = mutation.str_to_bytes(intermediate)
+            output1, output2 = mutation.str_to_bytes(intermediate, numbytes)
+            neg = None
         elif isinstance(intermediate, int):
-            output1, output2 = mutation.int_to_bytes(intermediate)
-        return output1, output2, datatype
+            output1, output2, neg = mutation.int_to_bytes(intermediate, numbytes)
+        
+        return output1, output2, datatype, neg
     
     @staticmethod
-    def convert_back(input: list, datatype):
+    def convert_back(input: list, datatype, numbytes, neg):
         if (datatype == str):
             output = mutation.bytes_to_str(input)
         elif (datatype == int):
-            output = mutation.bytes_to_int(input)
+            output = mutation.bytes_to_int(input, neg)
         elif (datatype == bytes):
             output = b''.join([bytes([int(byte, 2)]) for byte in input])
         return output
@@ -106,8 +145,8 @@ class mutation:
     ### FUNCTIONS THAT PERFORM MUTATIONS ON BINARY BYTES
     # Flip a set number of consecutive bits within a byte
     @staticmethod
-    def bitflip (input = "testing"):
-        b, number, datatype = mutation.convert_bytes(input)
+    def bitflip (input = "testing", numbytes = 64):
+        b, number, datatype, neg = mutation.convert_bytes(input, numbytes)
         # choose number of bits to change
         if number < 1:
             # Handle the case where the input is empty or the conversion failed
@@ -138,12 +177,12 @@ class mutation:
                 replacement += '1'
         replacement += byte_chosen[start_of_change + count:]
         b[index] = replacement
-        return mutation.convert_back(b, datatype)
+        return mutation.convert_back(b, datatype, numbytes, neg)
     
     # Flip a set number of consecutive bytes
     @staticmethod
-    def byteflip (input = "testing"):
-        b, number, datatype = mutation.convert_bytes(input)
+    def byteflip (input = "testing", numbytes = 64):
+        b, number, datatype, neg = mutation.convert_bytes(input, numbytes)
         if len(b) < 1:
             # Handle the case where the input is empty or the conversion failed
             return input
@@ -167,14 +206,14 @@ class mutation:
                 elif (bit == '0'):
                     temp += '1'
             b[bytes] = '0' + temp[1:] # Prevent exceed charmap
-        return mutation.convert_back(b, datatype)
+        return mutation.convert_back(b, datatype, numbytes, neg)
     
     # Insert byte from different test case ONLY WORKS FOR STRING
     @staticmethod
-    def insert_bytes (input = "testing", sample = "anything"):
+    def insert_bytes (input = "testing", sample = "anything", numbytes = 64):
         # Needs other cases to copy bytes from
-        b1, number1, datatype1 = mutation.convert_bytes(input)
-        b2, number2, datatype2 = mutation.convert_bytes(sample)
+        b1, number1, datatype1, neg = mutation.convert_bytes(input, numbytes)
+        b2, number2, datatype2, neg = mutation.convert_bytes(sample, numbytes)
         if (datatype1 == int):
             print("Input type may result in failure.")
         b3 = []
@@ -185,13 +224,13 @@ class mutation:
         b3.append(b2[extract])
         for i in range(insertion, number1):
             b3.append(b1[i])
-        output = mutation.convert_back(b3, datatype1)
+        output = mutation.convert_back(b3, datatype1, numbytes, neg)
         return output
     
     # Change a single byte in test case
     @staticmethod
-    def random_byte_str (input = "testing"):
-        b, number, datatype = mutation.convert_bytes(input)
+    def random_byte_str (input = "testing", numbytes=64):
+        b, number, datatype, neg = mutation.convert_bytes(input, numbytes)
         # Create a byte for replacement
         replacement = ""
         for i in range(bits_in_byte):
@@ -203,11 +242,11 @@ class mutation:
         # Choose which byte to replace
         rbyte = randint(0, number-1)
         b[rbyte] = replacement
-        return mutation.convert_back(b, datatype)
+        return mutation.convert_back(b, datatype, numbytes, neg)
     
     @staticmethod
-    def random_byte_int (input = 123467):
-        b, number, datatype = mutation.convert_bytes(input)
+    def random_byte_int (input = 123467, numbytes = 64):
+        b, number, datatype, neg = mutation.convert_bytes(input, numbytes)
         # Create a byte for replacement
         replacement = ""
         for i in range(bits_in_byte):
@@ -223,13 +262,13 @@ class mutation:
         else:
             rbyte = randint(4, 7)
         b[rbyte] = replacement
-        return mutation.convert_back(b, datatype)
+        return mutation.convert_back(b, datatype, numbytes, neg)
     
     
     # Completely remove a certain number of consecutive bytes
     @staticmethod
-    def delete_bytes (input = "testing"):
-        b, number, datatype = mutation.convert_bytes(input)
+    def delete_bytes (input = "testing", numbytes=64):
+        b, number, datatype, neg = mutation.convert_bytes(input, numbytes)
         if number <= 0:
             return mutation.convert_back(b, datatype)
         if (datatype == str):
@@ -252,27 +291,27 @@ class mutation:
                 count = randint(0, limit)
         for i in range(count + 1):
             b.pop(start_point)
-        return mutation.convert_back(b, datatype)
+        return mutation.convert_back(b, datatype, numbytes, neg)
     
     @staticmethod
-    def random_mutation(input = "testing"):
+    def random_mutation(input = "testing", num_bytes = 64):
         mutation_count = 5
         chosen_mutation = randint(1,mutation_count)
         match chosen_mutation:
             case 1:
-                return mutation.bitflip(input)
+                return mutation.bitflip(input, num_bytes)
             case 2:
-                return mutation.byteflip(input)
+                return mutation.byteflip(input, num_bytes)
             case 3:
                 sample = "something"
-                return mutation.insert_bytes(input, sample)
+                return mutation.insert_bytes(input, sample, num_bytes)
             case 4:
                 if isinstance(input, str):
-                    return mutation.random_byte_str(input)
+                    return mutation.random_byte_str(input, num_bytes)
                 elif isinstance(input, int):
-                    return mutation.random_byte_int(input)
+                    return mutation.random_byte_int(input, num_bytes)
             case 5:
-                return mutation.delete_bytes(input)
+                return mutation.delete_bytes(input, num_bytes)
             case _:
                 # Error
                 print("Error in random_mutation has occured.\n")

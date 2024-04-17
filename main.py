@@ -99,22 +99,23 @@ async def mutate_openapi(original_input, schema: Object):
             for i in schema.properties:
                 if x == i.name:
                     muatated_input[x] = copy.deepcopy(original_input[x])
-
-                    if i.schema.type == "integer":
+                    if i.schema.type.value == "integer":
                         muatated_input[x] = mutation.random_mutation(
                             int(muatated_input[x])
                         )
                         # muatated_input[x] = int(muatated_input[x])
                     else:
-                        muatated_input[x] = mutation.random_mutation(
+                        z = mutation.random_mutation(
                             str(muatated_input[x])
                         )
-                        
+                        muatated_input[x] = z
                         # muatated_input[x] = str(muatated_input[x])
                     break
+                    
     elif schema.type.value == "string":
         muatated_input = copy.deepcopy(original_input)
         muatated_input = mutation.random_mutation(muatated_input["string"])
+    print(muatated_input)
     return muatated_input
 
 
@@ -223,7 +224,7 @@ async def main():
                 elif args.arg1 == "ble":
                     mutated_input_seed = dict()
                     tests[len(tests.keys())] = datetime.now().isoformat()
-                    mutated_input_seed["bytes"] = mutation.random_mutation(seed["bytes"])
+                    mutated_input_seed["bytes"] = mutation.random_mutation(seed["bytes"], 32)
                     if isinstance(mutated_input_seed["bytes"] , int):
                         mutated_input_seed["bytes"]  = bytes([mutated_input_seed["bytes"] ])
                     elif isinstance(mutated_input_seed["bytes"] , str):

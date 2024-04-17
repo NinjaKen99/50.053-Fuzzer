@@ -8,6 +8,7 @@ ascii_max = 256
 ascii_uppercase_range = [65, 90]
 ascii_lowercase_range = [97, 122]
 ascii_number_range = [48, 57]
+whitespace = "00100000"
 
 
 class mutation:
@@ -17,12 +18,11 @@ class mutation:
     @staticmethod
     def str_to_bytes(input: str):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
-        byte_set = []
-        for x in input:
-            try:
-                byte_set.append(bin(ord(x))[2:].zfill(8))
-            except TypeError as e:
-                byte_set.append(bin(ord(chr(x)))[2:].zfill(8))
+        byte_set = [bin(ord(x))[2:].zfill(8) for x in input]
+        initial_byte_count = len(byte_set)
+        added = 128 - initial_byte_count
+        adding = ['00000000' for i in range(added)]
+        byte_set = adding + byte_set
         byte_count = len(byte_set)
         return byte_set, byte_count
     
@@ -46,9 +46,9 @@ class mutation:
     def int_to_bytes(input: int):
         # Returns an array of strings that represent bytes eg. ['00110011', '11001100]
         byte_set = []
-        b32 = bin(input)[2:].zfill(64)
-        for i in range(4):
-            byte_set.append(b32[i*8 : 8 + i*8])
+        b64 = bin(input)[2:].zfill(64)
+        for i in range(byte_count):
+            byte_set.append(b64[i*8 : 8 + i*8])
         byte_count = len(byte_set)
         return byte_set, byte_count
     
@@ -173,8 +173,10 @@ class mutation:
     @staticmethod
     def insert_bytes (input = "testing", sample = "anything"):
         # Needs other cases to copy bytes from
-        b1, number1 = mutation.str_to_bytes(input)
-        b2, number2 = mutation.str_to_bytes(sample)
+        b1, number1, datatype1 = mutation.convert_bytes(input)
+        b2, number2, datatype2 = mutation.convert_bytes(sample)
+        if (datatype1 == int):
+            print("Input type may result in failure.")
         b3 = []
         extract = randint(0,number2 -1)
         insertion = randint(0, number1 -1)
@@ -183,7 +185,7 @@ class mutation:
         b3.append(b2[extract])
         for i in range(insertion, number1):
             b3.append(b1[i])
-        output = ''.join([chr(int(x, 2)) for x in b3])
+        output = mutation.convert_back(b3, datatype1)
         return output
     
     # Change a single byte in test case
@@ -216,7 +218,6 @@ class mutation:
                 replacement += '0'
         # Choose which byte to replace
         rng = randint(0,1)
-        half = int(number/2)
         if (rng == 1):
             rbyte = randint(0, 3)
         else:

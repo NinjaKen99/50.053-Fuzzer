@@ -9,3 +9,4 @@ coverages/.coverage*
 **/*.pyc
 lcov_html/
 **/*.gcda
+sessions/*

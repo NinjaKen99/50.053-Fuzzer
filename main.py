@@ -150,6 +150,7 @@ async def seed_and_mutate_ble(SeedQ: dict):
 async def main():
     test_gen_times = {}
     test_exec_times = {}
+    test_id = 0
     SeedQ, FailureQ, client, no_coverage, total_coverage_data, interesting_time, failure_time, tests, args = await initalize()
 
     # for session folders
@@ -190,16 +191,16 @@ async def main():
             energy = assign_energy.AssignEnergy(seed)
             for _ in range(energy):
                 # For Django and Coap
-                test_id = len(tests)
-                test_gen_start = time.time()
+                
                 if args.arg1 == "coap" or args.arg1 == "http":
+                    mutate_start = time.time()
                     mutated_input_seed = await mutate_openapi(seed, SeedQ[path]["schema"])
+                    mutate_end = time.time()
 
-                    test_gen_end = time.time()
-
+                    test_gen_start = mutate_start
+                    test_gen_end = mutate_end
                     add = False
                     for method in SeedQ[path]["methods"]:
-
                         test_exec_start = time.time()
 
                         response_payload, status_code = await client.send_payload(
@@ -207,11 +208,13 @@ async def main():
                         )
 
                         test_exec_end = time.time()
+                        test_gen_times[test_id] = test_gen_end - test_gen_start
+                        test_exec_times[test_id] = test_exec_end - test_exec_start
 
-                        print(f"Test Generation Time: {test_gen_end - test_gen_start:.2f} secs")
-                        print(f"Test Execution Time: {test_exec_end - test_exec_start:.2f} secs")
+                        tests[test_id] = datetime.now().isoformat()
+                        test_id += 1
+                        test_gen_start = time.time()
 
-                        tests[len(tests)] = datetime.now().isoformat()
                         await asyncio.sleep(0.2)
                         # Check if the process has terminated
                         if no_coverage == False:
@@ -242,39 +245,35 @@ async def main():
                             ):
                                 add = True
                                 # Add to SeedQ
+
+                        test_gen_end = time.time()
                         
                     if add == True:
                         await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
 
-                    test_gen_times[test_id] = test_gen_end - test_gen_start
-                    test_exec_times[test_id] = test_exec_end - test_exec_start
-
                 elif args.arg1 == "ble":
-                    mutated_input_seed = dict()
-                    tests[len(tests.keys())] = datetime.now().isoformat()
-
                     test_gen_start = time.time()
+                    mutated_input_seed = dict()
+                    tests[test_id] = datetime.now().isoformat()
 
                     mutated_input_seed["bytes"] = mutation.random_mutation(seed["bytes"])
-
-                    test_gen_end = time.time()
 
                     if isinstance(mutated_input_seed["bytes"] , int):
                         mutated_input_seed["bytes"]  = bytes([mutated_input_seed["bytes"] ])
                     elif isinstance(mutated_input_seed["bytes"] , str):
                         mutated_input_seed["bytes"]  = mutated_input_seed["bytes"].encode("utf-8")
 
-                    test_exec_start = time.time()
+                    test_gen_end = time.time()
 
+                    test_exec_start = time.time()
                     driver = client.send_payload(mutated_input_seed, path, method)
                     server_process = await client.call_process()
                     response_payload, status_code = await driver
-
                     test_exec_end = time.time()
-
-                    print(f"Test Generation Time: {test_gen_end - test_gen_start:.2f} secs")
-                    print(f"Test Execution Time: {test_exec_end - test_exec_start:.2f} secs")
-
+                    test_gen_times[test_id] = test_gen_end - test_gen_start
+                    test_exec_times[test_id] = test_exec_end - test_exec_start
+                    test_id += 1
+                    
                     if no_coverage == False:
                         if server_process.poll() is not None:
                             print("Server crashed/timeout! Adding to the FailureQ.")
@@ -298,9 +297,7 @@ async def main():
                         ):
                             # Add to SeedQ
                             await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
-
-                    test_gen_times[test_id] = test_gen_end - test_gen_start
-                    test_exec_times[test_id] = test_exec_end - test_exec_start
+                    
                 
                 os.system('cls' if os.name=='nt' else 'clear')
                 print("Finished sending mutated input:")

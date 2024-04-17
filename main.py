@@ -189,6 +189,8 @@ async def main():
                 seed, path, method = await choose_next_seed(SeedQ, FailureQ, args.arg1)
                 seed = {"bytes": seed}
             energy = assign_energy.AssignEnergy(seed)
+            additional_start = 0
+            additional_end = 0
             for _ in range(energy):
                 # For Django and Coap
                 
@@ -252,27 +254,32 @@ async def main():
                         await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
 
                 elif args.arg1 == "ble":
-                    test_gen_start = time.time()
                     mutated_input_seed = dict()
                     tests[test_id] = datetime.now().isoformat()
 
+                    mutate_start = time.time()
                     mutated_input_seed["bytes"] = mutation.random_mutation(seed["bytes"])
+                    mutate_end = time.time()
+
+                    test_gen_start = mutate_start + additional_start
+                    test_gen_end = mutate_end + additional_end
 
                     if isinstance(mutated_input_seed["bytes"] , int):
                         mutated_input_seed["bytes"]  = bytes([mutated_input_seed["bytes"] ])
                     elif isinstance(mutated_input_seed["bytes"] , str):
                         mutated_input_seed["bytes"]  = mutated_input_seed["bytes"].encode("utf-8")
 
-                    test_gen_end = time.time()
-
                     test_exec_start = time.time()
                     driver = client.send_payload(mutated_input_seed, path, method)
                     server_process = await client.call_process()
                     response_payload, status_code = await driver
                     test_exec_end = time.time()
+
                     test_gen_times[test_id] = test_gen_end - test_gen_start
                     test_exec_times[test_id] = test_exec_end - test_exec_start
                     test_id += 1
+
+                    additional_start = time.time()
                     
                     if no_coverage == False:
                         if server_process.poll() is not None:
@@ -297,7 +304,8 @@ async def main():
                         ):
                             # Add to SeedQ
                             await add_to_SeedQ(SeedQ, path, mutated_input_seed, args.arg1)
-                    
+
+                    additional_end = time.time()     
                 
                 os.system('cls' if os.name=='nt' else 'clear')
                 print("Finished sending mutated input:")

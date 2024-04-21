@@ -6,7 +6,9 @@ import sys
 def count_entries(file_path):
     try:
         with open(file_path, 'r') as file:
+            data: dict
             data = json.load(file)
+            data.pop("0")
             return len(data)
     except FileNotFoundError:
         return 0
@@ -20,8 +22,8 @@ def plot_graph(app_name, num_sessions):
         session_path = os.path.join(sessions_dir, f'session {i}')
         interesting_path = os.path.join(session_path, 'interesting.json')
         crash_path = os.path.join(session_path, 'failure.json')
-
         interesting_counts.append(count_entries(interesting_path))
+        
         crash_counts.append(count_entries(crash_path))
 
     sessions = [f'Session {i}' for i in range(1, num_sessions + 1)]

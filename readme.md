@@ -1,37 +1,51 @@
-# Spec summary for BLE
-```yaml
-openble: 0.1.0
-info:
-  title: string
-  # Description in markdown
-  description: string
-  version: string
 
-services:
-  # Service key can be
-  # - 16 bit UUID in capital for GATT services: 181A
-  # - Long UUID in capital for GATT or custom services: 0000181A-0000-1000-8000-00805F9B34FB
-  # - Long identifier: org.bluetooth.service.environmental_sensing
-  # - Short identifier: environmental_sensing
-  # Identifiers are read from Nordic's UUID database- https://github.com/NordicSemiconductor/bluetooth-numbers-database/tree/master/v1
-  environmental_sensing:
-    name: Environmental Sensing Service
-    summary: Service to read temperature and humidity
-    characteristics:
-      # Characteristic key is defined similar to service key
-      temperature_celsius:
-        name: Temperature
-        summary: Read or write temperature in Degree Celsius
-        # Currently INT32 is the only supported type. TODO support other types
-        dataType: INT32
-        # READ, WRITE, NOTIFY, INDICATE
-        permissions:
-          - READ
-          - WRITE
-      humidity:
-        name: Humidity
-        summary: Read humidity in percentage. A value of 50 denotes 50% humidity
-        dataType: INT32
-        permissions:
-          - READ
-```
+
+# Prerequisites
+1. Python 3.11
+
+2. Gcov, GCC, 
+
+3. Linux installed
+
+# Supports
+
+1. http protocols in python3
+
+2. coap protocols in python2
+
+3. BLE protocols with gcov, genhtml
+
+# Steps to setup
+
+1. `pip install poetry`
+
+2. `poetry install`
+
+3. Copy .coveragerc.dist and rename it .coveragerc and edit the data dir (where .coverage file will be generated)
+
+4. Create a .env file at where main.py is and add a COVERAGE_PROCESS_START to point to where your .coveragerc is
+
+5. Put your application into targets directory
+
+6. Find a way to add coverage.py api (For examples refer to targets/DjangoWebApplication/middleware/coverage_middleware.py and targets/CoAPthon/coapthon/utils.py)
+
+7. Test and ensure that running application and running requests adds .coverage files into data dir
+
+8. Generate a openapi json for your application
+
+9. Add some examples for your schema
+
+10. Run `python main.py [protocol] [directory of application] [command to run (put under quotation)] --file [file of openapi] --restart`
+
+# Additional Steps for COAP
+
+1. install python2
+
+2. `python2 -m pip install coverage`
+
+# Dump commands
+python main.py coap ./targets/CoAPthon "coapserver.py" --file coap/openapi.json --restart
+
+python main.py http ./targets/DjangoWebApplication "manage.py runserver 8000 --noreload" --file django/openapi.json --restart
+
+python main.py ble ./targets/Zephyr "./zephyr.exe --bt-dev=127.0.0.1" --restart

@@ -279,7 +279,7 @@
             "minimum": -9223372036854776000,
             "format": "int64",
             "nullable": true,
-            "example":[12]
+            "example":[12, -12]
           }
         },
         "required": [

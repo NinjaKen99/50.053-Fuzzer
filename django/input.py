@@ -9,23 +9,17 @@ import httpx
 
 class DjangoClient:
 
-    def __init__(self, url):
+    def __init__(self, url, directory, command:str):
         self.url = url
+        self.directory = directory
+        self.command = command
         self.client = httpx.AsyncClient(timeout=30)
 
     async def call_process(self, context):
+        command_list = ["coverage", "run", "--rcfile=../../.coveragerc", f"--context={context}",] + self.command.split()
         return subprocess.Popen(
-            [
-                "coverage",
-                "run",
-                "--rcfile=../../.coveragerc",
-                f"--context={context}",
-                "manage.py",
-                "runserver",
-                "8000",
-                "--noreload",
-            ],
-            cwd="./targets/DjangoWebApplication",
+            command_list,
+            cwd=self.directory,
             preexec_fn=os.setpgrp,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -33,12 +27,15 @@ class DjangoClient:
         )
 
     async def login(self, username, password):
-        token = await self.client.post(
-            f"{self.url}/login/jwt/",
-            json={"username": username, "password": password},
-            follow_redirects=True,
-        )
-        self.bearer = "Token " + token.json()["token"]
+        try:
+            token = await self.client.post(
+                f"{self.url}/login/jwt/",
+                json={"username": username, "password": password},
+                follow_redirects=True,
+            )
+            self.bearer = "Token " + token.json()["token"]
+        except:
+            pass
 
     async def send_payload(self, input, uri, code, schema):
         # Replace 'http://<Django app URL>' with the base URL of your Django app (e.g., 'http://localhost:8000')
@@ -61,12 +58,14 @@ class DjangoClient:
             if i.schema.read_only == True:
                 copy_input.pop(i.name)
         try:
+            if self.bearer != None:
+                header = {"Authorization": self.bearer}
             match code:
                 case "get":
                     response = await self.client.get(
                         registration_url,
                         follow_redirects=True,
-                        headers={"Authorization": self.bearer},
+                        headers=header,
                     )
                 case "post":
                     
@@ -75,7 +74,7 @@ class DjangoClient:
                         registration_url,
                         json=input,
                         follow_redirects=True,
-                        headers={"Authorization": self.bearer},
+                        headers=header
                     )
                                         
                     
@@ -84,13 +83,13 @@ class DjangoClient:
                         registration_url,
                         json=input,
                         follow_redirects=True,
-                        headers={"Authorization": self.bearer},
+                        headers=header,
                     )
                 case "delete":
                     response = await self.client.delete(
                         registration_url,
                         follow_redirects=True,
-                        headers={"Authorization": self.bearer},
+                        headers=header,
                     )
 
             # Extract coverage data from the response

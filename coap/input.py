@@ -8,24 +8,19 @@ import asyncio
 
 
 class COAPClient:
-    def __init__(self, url):
+    def __init__(self, url, directory, command:str):
         self.url = url
+        self.directory = directory
+        self.command = command
 
     async def code_to_str(self, code: Code):
         string = code.__str__()[0:4]
         return string.replace(".", "")
 
     async def call_process(self, context):
-        return subprocess.Popen(
-            [
-                "python2",
-                "-m" "coverage",
-                "run",
-                "--rcfile=../../.coveragerc",
-                f"--context={context}",
-                "coapserver.py",
-            ],
-            cwd="./targets/CoAPthon",
+        command_list = ["python2","-m", "coverage", "run", "--rcfile=../../.coveragerc", f"--context={context}",] + self.command.split()
+        return subprocess.Popen(command_list,
+            cwd=self.directory,
             preexec_fn=os.setpgrp,
         )
 

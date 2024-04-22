@@ -253,18 +253,22 @@ class TargetEventsListener(Device.Listener):
 
 
 class BLEClient:
-
-    def __init__(self, port):
+    
+    def __init__(self, port, directory, command):
+        self.command:str
         self.port = port
+        self.directory = directory
+        self.command = command + ":" + str(self.port)
         self.hci_source = None
         self.hci_sink = None
 
     async def call_process(self, *args):
+        command_list = self.command.split()
         process = subprocess.Popen(
-            ["./zephyr.exe", "--bt-dev=127.0.0.1:" + str(self.port)],
+            command_list,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            cwd="targets/Zephyr",
+            cwd=self.directory,
             env={"GCOV_PREFIX":"./", "GCOV_PREFIX_STRIP":"3"}
         )
         return process

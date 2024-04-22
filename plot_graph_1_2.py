@@ -1,6 +1,7 @@
 import os
 import json
 import matplotlib.pyplot as plt
+import matplotlib.dates
 import sys
 from datetime import datetime
 
@@ -25,8 +26,6 @@ def plot_interesting_tests_over_time(app_name, session_number):
     # Extract the timestamps for interesting tests and all tests
     interesting_timestamps = sorted([datetime.fromisoformat(value["timestamp"]) for value in interesting_data.values() if isinstance(value, dict) and "timestamp" in value])
     test_timestamps = sorted([datetime.fromisoformat(timestamp) for timestamp in tests_data.values()])
-    print(interesting_timestamps)
-    print(test_timestamps)
     # Generate the y-values for the graph: number of interesting tests found up to each test timestamp
     y_values = []
     current_count = 0
@@ -36,7 +35,6 @@ def plot_interesting_tests_over_time(app_name, session_number):
             current_count += 1
             test_idx += 1
         y_values.append(current_count)
-    print(y_values)
     # Plot the graph
     plt.figure(figsize=(12, 6))
     plt.plot(test_timestamps, y_values, marker='o', linestyle='-')
@@ -44,8 +42,15 @@ def plot_interesting_tests_over_time(app_name, session_number):
     plt.ylabel('Interesting Tests (count)')
     plt.title(f'Interesting Tests vs Time')
     plt.grid(True)
-    plt.xticks(rotation=45)
-
+    plt.yticks([tick for tick in range(0, len(set(y_values)) + 1, 2)])
+    # Set the x-axis ticks and labels with consistent spacing
+    min_timestamp = min(test_timestamps)
+    max_timestamp = max(test_timestamps)
+    num_ticks = 10  # Adjust this value to control the number of ticks
+    timestamps_range = max_timestamp - min_timestamp
+    tick_spacing = timestamps_range / (num_ticks - 1)
+    ticks = [min_timestamp + tick_spacing * i for i in range(num_ticks)]
+    plt.xticks(ticks, [timestamp.strftime('%H:%M') for timestamp in ticks], rotation=45)
     # Save the plot to the specified directory
     output_file_path = os.path.join(session_dir, 'interesting_tests_over_time.png')
     plt.savefig(output_file_path)

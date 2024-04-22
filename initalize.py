@@ -25,6 +25,8 @@ async def init_parser():
     )
     parser.add_argument("--restart", action="store_true", help="Continue off from last fuzzing session")
     parser.add_argument("--python2", action="store_true", help="run commands as python2")
+    parser.add_argument('directory', type=str, help='Where the application is')
+    parser.add_argument('command', type=str, help='Specify the command to run (e.g., "manage.py runserver 8000 --noreload")')
     args = parser.parse_args()
     return args
 
@@ -35,7 +37,6 @@ async def initalize():
     restart is False, and handles coverage data and file operations.
     """
     args = await init_parser()
-
     if args.arg1 not in ["coap", "http", "ble"]:
         raise ValueError("Invalid protocol")
     # Check if the --file argument is provided
@@ -65,15 +66,15 @@ async def initalize():
     match args.arg1:
 
         case "coap":
-            client = COAPClient(url.url)
+            client = COAPClient(url.url, args.directory, args.command)
             SeedQ = parse_new_openapi(grammar)
 
         case "http":
-            client = DjangoClient(url.url)
+            client = DjangoClient(url.url, args.directory, args.command)
             SeedQ = parse_new_openapi(grammar)
 
         case "ble":
-            client = BLEClient(9000)
+            client = BLEClient(9000, args.directory, args.command)
             await client.initalize_transport()
             SeedQ = await client.get_services()          
 

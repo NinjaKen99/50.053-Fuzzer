@@ -42,19 +42,26 @@ class COAPClient:
 
     async def send_payload(self, payload, uri, code, schema):
         try:
+
             protocol = await Context.create_client_context()
             code = await self.str_to_code(code)
             # print(f"Sending payload: {payload} to {self.url}{uri} with {code}")
             msg = Message(
                 code=code, uri=f"{self.url}{uri}", payload=bytes(payload, "utf-8")
             )
-            response: Message = await protocol.request(msg).response
+            try:
+                response: Message = await asyncio.wait_for(protocol.request(msg).response, 60)
+                return response.payload.decode(), await self.code_to_str(response.code)
+            except asyncio.TimeoutError:
+                print("Request timed out.")
+            finally:
+                await protocol.shutdown()
             # Extract coverage data from the response
             # if response.status_code == 200:
             #     data = response.json()
             #     coverage_data = data.get('coverage', {})
                 # Return coverage data along with other response details
-            return response.payload.decode(), await self.code_to_str(response.code)
+            return None, None
         except Exception as e:
             print("Something happened!")
             print(e)

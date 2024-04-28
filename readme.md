@@ -52,10 +52,16 @@ python main.py ble ./targets/Zephyr "./zephyr.exe --bt-dev=127.0.0.1" --restart
 
 # Credits
 bumble: https://github.com/google/bumble
+
 Aiocoap: https://github.com/chrysn/aiocoap
+
 AioHttp: https://github.com/aio-libs/aiohttp
+
 lcovparser: https://github.com/ChrisTimperley/lcovparser.py
+
 openapi3-parser: https://github.com/manchenkoff/openapi3-parser
+
 coverage-lcov: https://github.com/TheCleric/coverage-lcov
+
 coveragepy: https://github.com/nedbat/coveragepy
 

@@ -3,9 +3,9 @@
 # Prerequisites
 1. Python 3.11
 
-2. Gcov, GCC, 
+2. Gcov, GCC
 
-3. Linux installed
+3. Linux/WSL installed
 
 # Supports
 
@@ -49,3 +49,13 @@ python main.py coap ./targets/CoAPthon "coapserver.py" --file coap/openapi.json 
 python main.py http ./targets/DjangoWebApplication "manage.py runserver 8000 --noreload" --file django/openapi3_0.json --restart
 
 python main.py ble ./targets/Zephyr "./zephyr.exe --bt-dev=127.0.0.1" --restart
+
+# Credits
+bumble: https://github.com/google/bumble
+Aiocoap: https://github.com/chrysn/aiocoap
+AioHttp: https://github.com/aio-libs/aiohttp
+lcovparser: https://github.com/ChrisTimperley/lcovparser.py
+openapi3-parser: https://github.com/manchenkoff/openapi3-parser
+coverage-lcov: https://github.com/TheCleric/coverage-lcov
+coveragepy: https://github.com/nedbat/coveragepy
+

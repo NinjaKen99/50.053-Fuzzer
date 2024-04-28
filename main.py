@@ -204,11 +204,9 @@ async def main():
                     add = False
                     for method in SeedQ[path]["methods"]:
                         test_exec_start = time.time()
-
                         response_payload, status_code = await client.send_payload(
                             mutated_input_seed, path, method, SeedQ[path]["schema"]
                         )
-
                         test_exec_end = time.time()
                         test_gen_times[test_id] = test_gen_end - test_gen_start
                         test_exec_times[test_id] = test_exec_end - test_exec_start

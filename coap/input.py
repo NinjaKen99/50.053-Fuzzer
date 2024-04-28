@@ -18,7 +18,7 @@ class COAPClient:
         return string.replace(".", "")
 
     async def call_process(self, context):
-        command_list = ["python2","-m", "coverage", "run", "--rcfile=../../.coveragerc", f"--context={context}",] + self.command.split()
+        command_list = ["python2","-m", "coverage", "run", "--rcfile=../../.coveragerc", f"--context={context}"] + self.command.split()
         return subprocess.Popen(command_list,
             cwd=self.directory,
             preexec_fn=os.setpgrp,
@@ -71,18 +71,8 @@ class COAPClient:
 
 
 # async def main():
-#     client = COAPClient("coap://127.0.0.1:5683")
-#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "get"))
-#     await asyncio.sleep(1)
-#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "post"))
-#     await asyncio.sleep(1)
-#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "delete"))
-#     await asyncio.sleep(1)
-#     # print(await client.send_payload({"string":"Hellfsf World!"}, "/child", "delete"))
-#     # await asyncio.sleep(1)
-#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "post"))
-#     await asyncio.sleep(1)
-#     print(await client.send_payload({"string":"Hellfsfsfo World!"}, "/child", "get"))
+#     client = COAPClient("coap://127.0.0.1:5683", "", "")
+#     print(await client.send_payload("New payloa\u001b_\u0019\u0010r PUT", "/advanced", "get", ""))
 
 
 # asyncio.run(main())

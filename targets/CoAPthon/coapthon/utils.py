@@ -38,13 +38,13 @@ def with_coverage(func):
                     original_payload["coverage"] = coverage_data
                     obj.payload = json.dumps(original_payload)
 
-            # Handle different types of results
-            if isinstance(result, tuple):
-                for item in result:
-                    if hasattr(item, 'payload'):
-                        attach_coverage_data(item)
-            elif hasattr(result, 'payload'):
-                attach_coverage_data(result)
+            # # Handle different types of results
+            # if isinstance(result, tuple):
+            #     for item in result:
+            #         if hasattr(item, 'payload'):
+            #             attach_coverage_data(item)
+            # elif hasattr(result, 'payload'):
+            #     attach_coverage_data(result)
 
         return result
     return wrapper

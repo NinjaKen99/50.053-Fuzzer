@@ -46,6 +46,6 @@
 # Dump commands
 python main.py coap ./targets/CoAPthon "coapserver.py" --file coap/openapi.json --restart
 
-python main.py http ./targets/DjangoWebApplication "manage.py runserver 8000 --noreload" --file django/openapi.json --restart
+python main.py http ./targets/DjangoWebApplication "manage.py runserver 8000 --noreload" --file django/openapi3_0.json --restart
 
 python main.py ble ./targets/Zephyr "./zephyr.exe --bt-dev=127.0.0.1" --restart
